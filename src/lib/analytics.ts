@@ -42,6 +42,47 @@ export function acwr(acute: number | null, chronic: number | null): AcwrStatus {
   return { acute, chronic, ratio, zone: "riesgo", label: "Riesgo alto", advice: "Pico de carga: alto riesgo de fatiga/lesión. Aflojá." };
 }
 
+export interface PmcPoint {
+  ctl: number; // Fitness (fondo, EMA 42d)
+  atl: number; // Fatiga (EMA 7d)
+  tsb: number; // Forma (CTL de ayer - ATL de ayer)
+}
+
+/**
+ * Performance Management Chart (TrainingPeaks). Carga diaria -> Fitness (CTL,
+ * EMA 42d), Fatiga (ATL, EMA 7d) y Forma (TSB = CTL_ayer - ATL_ayer).
+ * Días sin carga cuentan como 0 (descanso: la fatiga baja rápido).
+ */
+export function computePmc(dailyLoad: number[]): PmcPoint[] {
+  const out: PmcPoint[] = [];
+  let ctl = dailyLoad[0] ?? 0;
+  let atl = dailyLoad[0] ?? 0;
+  for (let i = 0; i < dailyLoad.length; i++) {
+    const load = dailyLoad[i] ?? 0;
+    const tsb = ctl - atl; // forma = fitness - fatiga de AYER
+    ctl = ctl + (load - ctl) / 42;
+    atl = atl + (load - atl) / 7;
+    out.push({ ctl, atl, tsb });
+  }
+  return out;
+}
+
+export interface FormStatus {
+  label: string;
+  advice: string;
+  tone: "fresh" | "neutral" | "productive" | "loaded" | "overreached";
+}
+
+/** Interpreta la Forma (TSB) en unidades de strain (Whoop). */
+export function formStatus(tsb: number | null): FormStatus {
+  if (tsb == null) return { label: "—", advice: "Sin datos.", tone: "neutral" };
+  if (tsb >= 3) return { label: "Fresco / a punto", advice: "Buen momento para un test o competir.", tone: "fresh" };
+  if (tsb >= 0) return { label: "Fresco leve", advice: "Recuperado; podés meter calidad.", tone: "neutral" };
+  if (tsb >= -3) return { label: "Entrenando (productivo)", advice: "Zona ideal para construir forma.", tone: "productive" };
+  if (tsb >= -6) return { label: "Cargado", advice: "Fatiga acumulada: cuidá la recuperación.", tone: "loaded" };
+  return { label: "Sobrecargado", advice: "Mucha fatiga: meté descanso o descarga.", tone: "overreached" };
+}
+
 /** Tendencia de una serie: pendiente simple (últimos n vs previos). */
 export function trendArrow(values: (number | null)[], window = 7): "up" | "down" | "flat" {
   const clean = values.filter((v): v is number => v != null);

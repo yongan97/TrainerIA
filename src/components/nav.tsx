@@ -8,6 +8,7 @@ import {
   TrendingUp,
   HeartPulse,
   ClipboardList,
+  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ const LINKS = [
   { href: "/overview", label: "Overview", icon: LayoutDashboard },
   { href: "/calendar", label: "Calendario", icon: CalendarDays },
   { href: "/trends", label: "Tendencias", icon: TrendingUp },
+  { href: "/forma", label: "Forma", icon: Gauge },
   { href: "/plan", label: "Plan", icon: ClipboardList },
   { href: "/rehab", label: "Rehab", icon: HeartPulse },
 ];
