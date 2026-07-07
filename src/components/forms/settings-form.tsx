@@ -54,9 +54,10 @@ export function SettingsForm({ initial }: { initial: Settings | null }) {
       </div>
       <div>
         <h3 className="mb-3 text-sm font-medium">Carrera objetivo</h3>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <F name="goal_name" label="Nombre" def={initial?.goal_name ?? null} type="text" />
           <F name="goal_date" label="Fecha" def={initial?.goal_date ?? null} type="date" />
+          <F name="goal_distance_km" label="Distancia" unit="km" def={initial?.goal_distance_km ?? null} />
         </div>
       </div>
       <div className="flex items-center gap-3">

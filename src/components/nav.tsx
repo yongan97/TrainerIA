@@ -17,6 +17,7 @@ import {
   Wind,
   Timer,
   Bell,
+  Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +35,7 @@ const SECTIONS: { title: string | null; links: { href: string; label: string; ic
       { href: "/calendar", label: "Calendario", icon: CalendarDays },
       { href: "/week", label: "Semana", icon: CalendarRange },
       { href: "/plan", label: "Plan", icon: ClipboardList },
+      { href: "/race", label: "Carrera", icon: Flag },
     ],
   },
   {

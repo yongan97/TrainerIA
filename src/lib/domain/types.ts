@@ -81,6 +81,7 @@ export interface Settings {
   weight_kg: number | null;
   goal_name: string | null;
   goal_date: string | null;
+  goal_distance_km: number | null;
   updated_at: string;
 }
 

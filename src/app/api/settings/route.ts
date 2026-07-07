@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
       weight_kg: numOrNull(b.weight_kg),
       goal_name: b.goal_name ? String(b.goal_name) : null,
       goal_date: b.goal_date && /^\d{4}-\d{2}-\d{2}$/.test(b.goal_date) ? b.goal_date : null,
+      goal_distance_km: numOrNull(b.goal_distance_km),
       updated_at: new Date().toISOString(),
     };
     const db = getAdminClient();
