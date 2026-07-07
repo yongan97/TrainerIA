@@ -3,8 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetupNotice } from "@/components/ui/setup-notice";
 import { WeeklyLoad, type WeeklyLoadPoint } from "@/components/charts/weekly-load";
 import { ConsistencyHeatmap, type HeatDay } from "@/components/consistency-heatmap";
+import { SportBadge } from "@/components/sport-badge";
 import { isConfigured, getActivities, getRecovery, getCycles, getSleep, getPlanned } from "@/lib/data";
 import { minutesOf } from "@/lib/activities";
+import { fmtDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +92,14 @@ export default async function WeekPage() {
   else if (cur.totalMin > 0 && cur.avgRec != null && cur.avgRec >= 60) parts.push("Buen equilibrio carga/recuperación: seguí así.");
   const narrative = parts.join(" ");
 
+  // Lo que viene: próximos entrenamientos planificados (7 días)
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const in7 = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
+  const upcoming = planned
+    .filter((p) => p.date >= todayStr && p.date <= in7)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 8);
+
   const chart: WeeklyLoadPoint[] = [];
   for (let i = 7; i >= 0; i--) {
     const m = weekStart(i);
@@ -119,6 +129,27 @@ export default async function WeekPage() {
         <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">Resumen del entrenador</div>
         <p className="text-[15px] leading-relaxed">{narrative}</p>
       </div>
+
+      {upcoming.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-foreground">Lo que viene</CardTitle>
+            <p className="text-xs text-muted-foreground">Próximos entrenamientos del plan (7 días)</p>
+          </CardHeader>
+          <CardContent className="space-y-2 py-2">
+            {upcoming.map((p) => (
+              <div key={p.id} className="flex items-center justify-between gap-3 border-b border-border/50 py-2 last:border-0">
+                <div className="flex items-center gap-3">
+                  <SportBadge sport={p.sport} showLabel={false} />
+                  <span className="text-sm font-medium">{p.type ?? "Sesión"}</span>
+                  <span className="text-xs text-muted-foreground">{(p.targets as { notas?: string })?.notas ?? ""}</span>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground">{fmtDate(p.date)}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Delta label="Volumen" value={`${cur.totalMin} min`} cur={cur.totalMin} prev={prev.totalMin} />
