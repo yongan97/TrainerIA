@@ -1,0 +1,2 @@
+# TrainerIA
+Entrenador
