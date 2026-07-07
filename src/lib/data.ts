@@ -191,6 +191,23 @@ export function getSyncStatus(): Promise<SyncStatus> {
   }, { whoopLast: null, garminLast: null });
 }
 
+export interface CycleRow {
+  date: string;
+  day_strain: number | null;
+}
+
+export function getCycles(limit = 60): Promise<CycleRow[]> {
+  return safe(async () => {
+    const db = getAdminClient();
+    const { data } = await db
+      .from("whoop_cycles")
+      .select("date, day_strain")
+      .order("date", { ascending: false })
+      .limit(limit);
+    return (data ?? []) as CycleRow[];
+  }, []);
+}
+
 export function getRehabLogs(limit = 60): Promise<RehabLog[]> {
   return safe(async () => {
     const db = getAdminClient();
