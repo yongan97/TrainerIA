@@ -143,6 +143,23 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
           </CardContent>
         </Card>
 
+        {/* Efecto del entrenamiento (Garmin) */}
+        {(metrics.aerobic_te != null || metrics.vo2max != null || metrics.garmin_load != null) && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-foreground">Efecto del entrenamiento (Garmin)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <Metric label="Efecto aeróbico" value={metrics.aerobic_te != null ? metrics.aerobic_te.toFixed(1) : "—"} />
+                <Metric label="Efecto anaeróbico" value={metrics.anaerobic_te != null ? metrics.anaerobic_te.toFixed(1) : "—"} />
+                <Metric label="Carga (Garmin)" value={metrics.garmin_load != null ? String(Math.round(metrics.garmin_load)) : "—"} />
+                <Metric label="VO₂max" value={metrics.vo2max != null ? String(Math.round(metrics.vo2max)) : "—"} />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Sensaciones (RPE) */}
         <Card className="lg:col-span-2">
           <CardHeader>

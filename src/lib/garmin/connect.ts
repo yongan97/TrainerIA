@@ -66,9 +66,17 @@ export function mapGarminActivity(a: GAct) {
   const dur = num(a.duration);
   const paceSecPerKm = dist && dur && dist > 0 ? dur / (dist / 1000) : null;
 
+  // Métricas comunes ricas de Garmin (VO2max, training effect, carga).
+  const common: Record<string, number | null> = {
+    vo2max: num(a.vO2MaxValue),
+    aerobic_te: num(a.aerobicTrainingEffect),
+    anaerobic_te: num(a.anaerobicTrainingEffect),
+    garmin_load: num(a.activityTrainingLoad),
+  };
   const metrics: Record<string, number | null> =
     sport === "bike"
       ? {
+          ...common,
           avg_power: num(a.avgPower),
           max_power: num(a.maxPower),
           normalized_power: num(a.normPower),
@@ -76,11 +84,12 @@ export function mapGarminActivity(a: GAct) {
         }
       : sport === "run"
         ? {
+            ...common,
             avg_pace_s_per_km: paceSecPerKm,
             avg_cadence_spm: num(a.averageRunningCadenceInStepsPerMinute),
             avg_run_power: num(a.avgPower),
           }
-        : {};
+        : common;
 
   const avgHr = num(a.averageHR);
   const maxHr = num(a.maxHR);
