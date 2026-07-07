@@ -111,6 +111,61 @@ export function getPlanned(limit = 60): Promise<PlannedSession[]> {
   }, []);
 }
 
+export interface HomeData {
+  recovery: WhoopRecovery | null;
+  sleepDurationS: number | null;
+  todayStrain: number | null;
+  trained: Activity[]; // ejecutado de hoy
+  next: PlannedSession | null; // sesión de hoy o la próxima
+  nextIsToday: boolean;
+}
+
+/** Datos "de hoy" para el home: cómo estoy, qué toca, si ya entrené. */
+export function getHomeData(today: string): Promise<HomeData> {
+  const tomorrow = new Date(new Date(today + "T00:00:00").getTime() + 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  return safe<HomeData>(
+    async () => {
+      const db = getAdminClient();
+      const [rec, sleep, cycle, acts, planned] = await Promise.all([
+        db.from("whoop_recovery").select("*").order("date", { ascending: false }).limit(1),
+        db.from("whoop_sleep").select("duration_s").order("date", { ascending: false }).limit(1),
+        db.from("whoop_cycles").select("day_strain").eq("date", today).limit(1),
+        db
+          .from("activities")
+          .select("*")
+          .gte("started_at", today)
+          .lt("started_at", tomorrow)
+          .order("started_at", { ascending: false }),
+        db
+          .from("planned_sessions")
+          .select("*")
+          .gte("date", today)
+          .order("date", { ascending: true })
+          .limit(1),
+      ]);
+      const next = (planned.data?.[0] as PlannedSession) ?? null;
+      return {
+        recovery: (rec.data?.[0] as WhoopRecovery) ?? null,
+        sleepDurationS: (sleep.data?.[0]?.duration_s as number) ?? null,
+        todayStrain: (cycle.data?.[0]?.day_strain as number) ?? null,
+        trained: (acts.data ?? []) as Activity[],
+        next,
+        nextIsToday: next?.date === today,
+      };
+    },
+    {
+      recovery: null,
+      sleepDurationS: null,
+      todayStrain: null,
+      trained: [],
+      next: null,
+      nextIsToday: false,
+    },
+  );
+}
+
 export interface SyncStatus {
   whoopLast: string | null; // YYYY-MM-DD
   garminLast: string | null; // YYYY-MM-DD

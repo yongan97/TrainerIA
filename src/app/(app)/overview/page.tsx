@@ -1,164 +1,203 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Moon, HeartPulse, Activity as ActivityIcon, Flame, CalendarClock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Stat } from "@/components/ui/stat";
-import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
+import { SetupNotice } from "@/components/ui/setup-notice";
 import { SportBadge } from "@/components/sport-badge";
-import {
-  isConfigured,
-  isWhoopConnected,
-  getRecovery,
-  getDailySummary,
-  getPlanned,
-} from "@/lib/data";
-import { fmt, fmtDate, fmtDuration, recoveryColor } from "@/lib/format";
+import { isConfigured, isWhoopConnected, getHomeData } from "@/lib/data";
+import { fmt, fmtDuration, fmtDistance, recoveryColor } from "@/lib/format";
+import type { PlannedSession } from "@/lib/domain/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function OverviewPage() {
-  const configured = isConfigured();
-  const connected = await isWhoopConnected();
+function readiness(score: number | null | undefined) {
+  if (score == null) return { label: "Sin dato", advice: "Sincronizá Whoop para ver tu estado.", tone: "muted" as const };
+  if (score >= 67) return { label: "Recuperado", advice: "Buen día para meter calidad.", tone: "good" as const };
+  if (score >= 34) return { label: "Precaución", advice: "Modulá la intensidad, escuchá el cuerpo.", tone: "warn" as const };
+  return { label: "Recovery bajo", advice: "Priorizá recuperar: suave o descanso.", tone: "bad" as const };
+}
 
-  if (!configured) {
+function isHardSession(p: PlannedSession): boolean {
+  const codigo = (p.targets as { codigo?: string })?.codigo;
+  return codigo === "T1" || /t1|series|pasada|calidad|interval/i.test(p.type ?? "");
+}
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 6) return "Buenas noches";
+  if (h < 13) return "Buen día";
+  if (h < 20) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+export default async function OverviewPage() {
+  if (!isConfigured()) {
     return (
       <Page>
         <SetupNotice
           title="Falta configurar el entorno"
-          body="Definí NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY (ver .env.example) y aplicá la migración de supabase/migrations."
+          body="Definí las variables de Supabase (ver .env.example) y aplicá la migración."
         />
       </Page>
     );
   }
-
-  const [recovery, daily, planned] = await Promise.all([
-    getRecovery(14),
-    getDailySummary(1),
-    getPlanned(30),
-  ]);
-  const latest = recovery[0];
+  const connected = await isWhoopConnected();
   const today = new Date().toISOString().slice(0, 10);
-  const plannedToday = planned.filter((p) => p.date === today);
+  const home = await getHomeData(today);
+  const r = home.recovery;
+  const rd = readiness(r?.recovery_score);
+  const trained = home.trained.filter((a) => a.sport !== "increase_relaxation");
+  const hardToday = home.next && home.nextIsToday && isHardSession(home.next);
+  const conflict = hardToday && (r?.recovery_score ?? 100) < 50;
+
+  const toneRing: Record<string, string> = {
+    good: "ring-primary/40",
+    warn: "ring-yellow-400/40",
+    bad: "ring-red-400/40",
+    muted: "ring-border",
+  };
 
   return (
     <Page>
       {!connected && (
         <SetupNotice
           title="Conectá tu cuenta de Whoop"
-          body="Autorizá el acceso vía OAuth para traer recovery, sueño, strain y entrenamientos."
+          body="Autorizá el acceso para traer recovery, sueño, strain y entrenamientos."
           cta={{ href: "/api/whoop/auth", label: "Conectar Whoop" }}
         />
       )}
 
-      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat
-          label="Recovery"
-          value={fmt(latest?.recovery_score)}
-          suffix="%"
-          className={recoveryColor(latest?.recovery_score)}
-        />
-        <Stat label="HRV" value={fmt(latest?.hrv_rmssd)} suffix="ms" />
-        <Stat label="FC reposo" value={fmt(latest?.rhr)} suffix="bpm" />
-        <Stat
-          label="Strain de ayer"
-          value={fmt(daily[0]?.day_strain, 1)}
-        />
-      </section>
+      {/* CÓMO ESTOY — hero */}
+      <Card className={`ring-1 ${toneRing[rd.tone]}`}>
+        <CardContent className="flex flex-col gap-6 py-6 sm:flex-row sm:items-center">
+          <div className="flex items-baseline gap-3">
+            <div className={`text-6xl font-bold tabular-nums ${recoveryColor(r?.recovery_score)}`}>
+              {fmt(r?.recovery_score)}
+              <span className="text-2xl font-normal text-muted-foreground">%</span>
+            </div>
+            <div>
+              <div className={`text-lg font-semibold ${recoveryColor(r?.recovery_score)}`}>{rd.label}</div>
+              <div className="max-w-[16rem] text-sm text-muted-foreground">{rd.advice}</div>
+            </div>
+          </div>
+          <div className="grid flex-1 grid-cols-3 gap-4 sm:border-l sm:border-border sm:pl-6">
+            <Mini icon={HeartPulse} label="HRV" value={fmt(r?.hrv_rmssd)} unit="ms" />
+            <Mini icon={ActivityIcon} label="FC reposo" value={fmt(r?.rhr)} unit="bpm" />
+            <Mini icon={Moon} label="Sueño" value={fmtDuration(home.sleepDurationS)} unit="" />
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Qué toca hoy según el plan */}
-      <section className="mt-8">
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-          Qué toca hoy
-        </h2>
+      {/* aviso inteligente plan vs recovery */}
+      {conflict && (
+        <div className="mt-4 flex items-start gap-2 rounded-lg border border-yellow-400/30 bg-yellow-400/10 px-4 py-3 text-sm text-yellow-200">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            Hoy toca <b>{home.next?.type}</b> (sesión de calidad) pero tu recovery está en{" "}
+            {fmt(r?.recovery_score)}%. Considerá moverla, acortarla o bajarle intensidad.
+          </span>
+        </div>
+      )}
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        {/* PRÓXIMO ENTRENAMIENTO */}
         <Card>
           <CardContent className="py-5">
-            {plannedToday.length === 0 ? (
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  No hay nada planificado para hoy.
+            <SectionTitle icon={CalendarClock}>
+              {home.nextIsToday ? "Qué toca hoy" : "Próximo entrenamiento"}
+            </SectionTitle>
+            {home.next ? (
+              <div className="mt-3">
+                <div className="flex items-center gap-3">
+                  <SportBadge sport={home.next.sport} />
+                  <span className="font-medium">{home.next.type ?? "Sesión"}</span>
+                  {!home.nextIsToday && (
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {new Date(home.next.date + "T00:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "2-digit", month: "short" })}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {(home.next.targets as { notas?: string })?.notas ??
+                    fmtDuration(home.next.target_duration_s)}
                 </p>
-                <Link
-                  href="/plan"
-                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                >
-                  Cargar plan <ArrowRight className="h-3.5 w-3.5" />
+                <Link href="/plan" className="mt-3 inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                  Ver plan <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
             ) : (
-              <ul className="space-y-3">
-                {plannedToday.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <SportBadge sport={p.sport} />
-                      <span className="text-sm">{p.type ?? "Sesión"}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {fmtDuration(p.target_duration_s)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-3 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">No hay nada planificado.</p>
+                <Link href="/plan" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                  Cargar plan <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
             )}
           </CardContent>
         </Card>
-      </section>
 
-      {/* Recovery reciente */}
-      <section className="mt-8">
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-          Recovery — últimos 14 días
-        </h2>
-        {recovery.length === 0 ? (
-          <EmptyState>
-            Sin datos todavía. {connected ? "Sincronizá Whoop." : "Conectá Whoop para empezar."}
-          </EmptyState>
-        ) : (
-          <Card>
-            <CardContent className="p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="px-5 py-3 font-medium">Fecha</th>
-                    <th className="px-5 py-3 font-medium">Recovery</th>
-                    <th className="px-5 py-3 font-medium">HRV</th>
-                    <th className="px-5 py-3 font-medium">FC reposo</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recovery.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="border-b border-border/50 last:border-0"
-                    >
-                      <td className="px-5 py-3">{fmtDate(r.date)}</td>
-                      <td
-                        className={`px-5 py-3 font-medium ${recoveryColor(r.recovery_score)}`}
-                      >
-                        {fmt(r.recovery_score)}%
-                      </td>
-                      <td className="px-5 py-3">{fmt(r.hrv_rmssd)} ms</td>
-                      <td className="px-5 py-3">{fmt(r.rhr)} bpm</td>
-                    </tr>
+        {/* ¿YA ENTRENÉ? + STRAIN */}
+        <Card>
+          <CardContent className="py-5">
+            <SectionTitle icon={Flame}>Hoy · entrenamiento y strain</SectionTitle>
+            <div className="mt-3">
+              <div className="mb-3 flex items-baseline gap-2">
+                <span className="text-3xl font-semibold tabular-nums">{fmt(home.todayStrain, 1)}</span>
+                <span className="text-sm text-muted-foreground">strain del día (Whoop)</span>
+              </div>
+              {trained.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Todavía no entrenaste hoy.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {trained.map((a) => (
+                    <li key={a.id} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                      <SportBadge sport={a.sport} showLabel={false} />
+                      <span>{fmtDuration(a.duration_s)}</span>
+                      {a.distance_m && <span className="text-muted-foreground">· {fmtDistance(a.distance_m)}</span>}
+                      {a.avg_hr && <span className="text-muted-foreground">· {a.avg_hr} bpm</span>}
+                    </li>
                   ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        )}
-      </section>
+                </ul>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </Page>
+  );
+}
+
+function Mini({ icon: Icon, label, value, unit }: { icon: typeof Moon; label: string; value: string; unit: string }) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </div>
+      <div className="mt-1 text-xl font-semibold tabular-nums">
+        {value}
+        {unit && value !== "—" && <span className="ml-1 text-xs font-normal text-muted-foreground">{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ icon: Icon, children }: { icon: typeof Moon; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+      <Icon className="h-4 w-4" />
+      {children}
+    </div>
   );
 }
 
 function Page({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">{greeting()}, Juan</h1>
         <p className="text-sm text-muted-foreground">
-          Recovery, sueño y strain — y qué toca según el plan.
+          {new Date().toLocaleDateString("es-AR", { weekday: "long", day: "2-digit", month: "long" })}
         </p>
       </header>
       {children}
