@@ -2,7 +2,7 @@ import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormCharts, type FormPoint } from "@/components/charts/form-charts";
 import { isConfigured, getCycles } from "@/lib/data";
-import { computePmc, formStatus } from "@/lib/analytics";
+import { computePmc, formStatus, trainingStatus } from "@/lib/analytics";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +50,16 @@ export default async function FormaPage() {
   });
 
   const last = pmc[pmc.length - 1];
+  const prev7 = pmc[pmc.length - 8] ?? pmc[0];
   const fs = formStatus(last.tsb);
+  const ts = trainingStatus(last.ctl, prev7.ctl, last.tsb);
+  const tsTone: Record<string, string> = {
+    productive: "text-primary bg-primary/5 ring-primary/30",
+    maintaining: "text-sky-400 bg-sky-400/5 ring-sky-400/30",
+    peaking: "text-violet-300 bg-violet-400/5 ring-violet-400/30",
+    overreach: "text-red-400 bg-red-400/5 ring-red-400/30",
+    detrain: "text-yellow-400 bg-yellow-400/5 ring-yellow-400/30",
+  };
   const toneColor: Record<string, string> = {
     fresh: "text-sky-400",
     neutral: "text-primary",
@@ -67,10 +76,16 @@ export default async function FormaPage() {
         <Metric label="Forma (TSB)" value={last.tsb.toFixed(1)} hint={fs.label} valueClass={toneColor[fs.tone]} />
       </div>
 
+      <div className={`mb-6 rounded-xl border border-border p-5 ring-1 ${tsTone[ts.tone]}`}>
+        <div className="text-xs font-semibold uppercase tracking-wide">Estado de entrenamiento</div>
+        <div className="mt-1 text-2xl font-bold">{ts.label}</div>
+        <p className="mt-1 text-sm text-muted-foreground">{ts.advice}</p>
+      </div>
+
       <Card className="mb-6">
         <CardContent className="py-4">
           <p className="text-sm">
-            <span className={`font-medium ${toneColor[fs.tone]}`}>{fs.label}.</span>{" "}
+            <span className={`font-medium ${toneColor[fs.tone]}`}>Forma: {fs.label}.</span>{" "}
             <span className="text-muted-foreground">{fs.advice}</span>
           </p>
         </CardContent>

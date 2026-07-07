@@ -83,6 +83,22 @@ export function formStatus(tsb: number | null): FormStatus {
   return { label: "Sobrecargado", advice: "Mucha fatiga: meté descanso o descarga.", tone: "overreached" };
 }
 
+export interface TrainingStatus {
+  label: string;
+  advice: string;
+  tone: "productive" | "maintaining" | "peaking" | "overreach" | "detrain";
+}
+
+/** Estado de entrenamiento a partir de la tendencia del fitness (CTL) y la forma (TSB). */
+export function trainingStatus(ctlNow: number, ctlPrev: number, tsb: number): TrainingStatus {
+  const slope = ctlNow - ctlPrev; // cambio de fitness en la ventana
+  if (tsb <= -6) return { label: "Sobrecarga", advice: "Fatiga alta: sumá recuperación antes de seguir cargando.", tone: "overreach" };
+  if (tsb >= 4 && slope <= 0.2) return { label: "En pico / afinando", advice: "Fresco y con fitness: buen momento para rendir.", tone: "peaking" };
+  if (slope > 0.3) return { label: "Productivo", advice: "Estás construyendo fitness de forma sostenible. Seguí.", tone: "productive" };
+  if (slope < -0.3) return { label: "Desentrenando", advice: "El fitness baja: si no es descarga intencional, subí un poco el volumen.", tone: "detrain" };
+  return { label: "Manteniendo", advice: "Fitness estable. Para progresar, aumentá la carga gradualmente.", tone: "maintaining" };
+}
+
 /** Tendencia de una serie: pendiente simple (últimos n vs previos). */
 export function trendArrow(values: (number | null)[], window = 7): "up" | "down" | "flat" {
   const clean = values.filter((v): v is number => v != null);
