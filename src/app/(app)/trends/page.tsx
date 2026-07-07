@@ -1,8 +1,9 @@
 import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { TrendsCharts, type TrendPoint } from "@/components/charts/trends-charts";
-import { Card, CardContent } from "@/components/ui/card";
+import { CorrelationScatter, type CorrPoint } from "@/components/charts/correlation-scatter";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isConfigured, getRecovery, getActivities, getCycles } from "@/lib/data";
-import { rollingAvg, acwr } from "@/lib/analytics";
+import { rollingAvg, acwr, linreg } from "@/lib/analytics";
 import { isIndoorBike, minutesOf } from "@/lib/activities";
 
 export const dynamic = "force-dynamic";
@@ -71,6 +72,17 @@ export default async function TrendsPage() {
   const totalBikeOut = [...minByDay.values()].reduce((s, m) => s + m.bikeOut, 0);
   const indoorPct = totalBikeIn + totalBikeOut > 0 ? Math.round((totalBikeIn / (totalBikeIn + totalBikeOut)) * 100) : null;
 
+  // Carga (strain) -> recovery del día siguiente: tu tolerancia personal
+  const strainRecPairs: CorrPoint[] = [];
+  for (const [d, strain] of strainByDay) {
+    if (strain == null) continue;
+    const next = new Date(new Date(d + "T00:00:00Z").getTime() + 86_400_000).toISOString().slice(0, 10);
+    const rec = recByDay.get(next)?.recovery_score;
+    if (rec != null) strainRecPairs.push({ x: strain, y: rec });
+  }
+  const strainReg = linreg(strainRecPairs);
+  const perStrain = strainReg ? Math.round(strainReg.slope * 10) / 10 : null;
+
   const hasData = recovery.length > 0 || data.some((d) => d.run || d.bike);
 
   const zoneColor: Record<string, string> = {
@@ -108,6 +120,22 @@ export default async function TrendsPage() {
           </Card>
 
           <TrendsCharts data={data} />
+
+          {strainRecPairs.length >= 8 && strainReg && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-foreground">Cuánto te cuesta un día duro</CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  {perStrain != null && perStrain < 0
+                    ? `En tus datos, cada punto de strain se asocia a ~${Math.abs(perStrain)}% menos de recovery al día siguiente. Es tu costo de recuperación por carga.`
+                    : "En tus datos la carga no golpea mucho tu recovery del día siguiente: buena tolerancia."}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <CorrelationScatter data={strainRecPairs} xLabel="Strain del día" yLabel="Recovery día sig." xUnit="" yUnit="%" line={strainReg} />
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </Page>
