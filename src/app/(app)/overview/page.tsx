@@ -3,7 +3,9 @@ import { ArrowRight, Moon, HeartPulse, Activity as ActivityIcon, Flame, Calendar
 import { Card, CardContent } from "@/components/ui/card";
 import { SetupNotice } from "@/components/ui/setup-notice";
 import { SportBadge } from "@/components/sport-badge";
-import { isConfigured, isWhoopConnected, getHomeData } from "@/lib/data";
+import { isConfigured, isWhoopConnected, getHomeData, getCoachContext } from "@/lib/data";
+import { dailyBrief } from "@/lib/coach";
+import { CoachCard } from "@/components/coach-card";
 import { fmt, fmtDuration, fmtDistance, recoveryColor } from "@/lib/format";
 import type { PlannedSession } from "@/lib/domain/types";
 
@@ -42,7 +44,8 @@ export default async function OverviewPage() {
   }
   const connected = await isWhoopConnected();
   const today = new Date().toISOString().slice(0, 10);
-  const home = await getHomeData(today);
+  const [home, coachCtx] = await Promise.all([getHomeData(today), getCoachContext(today)]);
+  const brief = dailyBrief(coachCtx);
   const r = home.recovery;
   const rd = readiness(r?.recovery_score);
   const trained = home.trained.filter((a) => a.sport !== "increase_relaxation");
@@ -65,6 +68,9 @@ export default async function OverviewPage() {
           cta={{ href: "/api/whoop/auth", label: "Conectar Whoop" }}
         />
       )}
+
+      {/* RECOMENDACIÓN DEL COACH */}
+      {connected && <CoachCard brief={brief} />}
 
       {/* CÓMO ESTOY — hero */}
       <Card className={`ring-1 ${toneRing[rd.tone]}`}>

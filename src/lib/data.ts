@@ -166,6 +166,71 @@ export function getHomeData(today: string): Promise<HomeData> {
   );
 }
 
+import { computePmc, rollingAvg } from "@/lib/analytics";
+import type { CoachContext } from "@/lib/coach";
+
+/** Junta todo el contexto de hoy para el motor de coaching. */
+export function getCoachContext(today: string): Promise<CoachContext> {
+  const tomorrow = new Date(new Date(today + "T00:00:00").getTime() + 86_400_000).toISOString().slice(0, 10);
+  const empty: CoachContext = {
+    recovery: null, hrv: null, hrvBaseline: null, tsb: null, acwr: null,
+    sleepHours: null, kneePain: null, plannedType: null, plannedIsHard: false, alreadyTrained: false,
+  };
+  return safe<CoachContext>(async () => {
+    const db = getAdminClient();
+    const [recR, cycR, slpR, rhbR, plnR, actR] = await Promise.all([
+      db.from("whoop_recovery").select("date, recovery_score, hrv_rmssd").order("date", { ascending: false }).limit(30),
+      db.from("whoop_cycles").select("date, day_strain").order("date", { ascending: false }).limit(90),
+      db.from("whoop_sleep").select("duration_s").order("date", { ascending: false }).limit(1),
+      db.from("rehab_logs").select("knee_pain").eq("date", today).limit(1),
+      db.from("planned_sessions").select("type, targets").eq("date", today),
+      db.from("activities").select("id").gte("started_at", today).lt("started_at", tomorrow).limit(1),
+    ]);
+
+    const recs = (recR.data ?? []) as Array<{ date: string; recovery_score: number | null; hrv_rmssd: number | null }>;
+    const latest = recs[0];
+    const hrvAsc = [...recs].reverse().map((r) => r.hrv_rmssd);
+    const hrvBase = rollingAvg(hrvAsc, 7);
+
+    // Serie de carga continua para PMC/ACWR
+    const cyc = (cycR.data ?? []) as Array<{ date: string; day_strain: number | null }>;
+    const byDay = new Map(cyc.map((c) => [c.date, c.day_strain ?? 0]));
+    const dates: string[] = [];
+    const start = new Date(new Date(today + "T00:00:00").getTime() - 89 * 86_400_000);
+    for (let d = new Date(start); d <= new Date(today + "T00:00:00"); d.setUTCDate(d.getUTCDate() + 1)) {
+      dates.push(d.toISOString().slice(0, 10));
+    }
+    const load = dates.map((d) => byDay.get(d) ?? 0);
+    const pmc = computePmc(load);
+    const tsb = pmc.length ? pmc[pmc.length - 1].tsb : null;
+    const acuteArr = rollingAvg(load, 7);
+    const chronicArr = rollingAvg(load, 28);
+    const acute = acuteArr[acuteArr.length - 1];
+    const chronic = chronicArr[chronicArr.length - 1];
+    const acwrRatio = acute != null && chronic != null && chronic > 0 ? acute / chronic : null;
+
+    const plans = (plnR.data ?? []) as Array<{ type: string | null; targets: unknown }>;
+    const plannedType = plans[0]?.type ?? null;
+    const plannedIsHard = plans.some((p) => {
+      const codigo = (p.targets as { codigo?: string })?.codigo;
+      return codigo === "T1" || /t1|series|pasada|calidad|interval/i.test(p.type ?? "");
+    });
+
+    return {
+      recovery: latest?.recovery_score ?? null,
+      hrv: latest?.hrv_rmssd ?? null,
+      hrvBaseline: hrvBase.length ? hrvBase[hrvBase.length - 1] : null,
+      tsb,
+      acwr: acwrRatio,
+      sleepHours: slpR.data?.[0]?.duration_s != null ? (slpR.data[0].duration_s as number) / 3600 : null,
+      kneePain: (rhbR.data?.[0]?.knee_pain as number) ?? null,
+      plannedType,
+      plannedIsHard,
+      alreadyTrained: (actR.data?.length ?? 0) > 0,
+    };
+  }, empty);
+}
+
 export interface SyncStatus {
   whoopLast: string | null; // YYYY-MM-DD
   garminLast: string | null; // YYYY-MM-DD
