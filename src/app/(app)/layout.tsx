@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { Activity } from "lucide-react";
 import { Nav } from "@/components/nav";
-import { SyncButton } from "@/components/sync-button";
-import { isWhoopConnected } from "@/lib/data";
+import { SyncStatusPanel, SyncStatusInline } from "@/components/sync-status";
+import { isWhoopConnected, getSyncStatus } from "@/lib/data";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const connected = await isWhoopConnected();
+  const [connected, status] = await Promise.all([
+    isWhoopConnected(),
+    getSyncStatus(),
+  ]);
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -23,7 +26,7 @@ export default async function AppLayout({
         <Nav />
         <div className="mt-auto pt-4">
           {connected ? (
-            <SyncButton />
+            <SyncStatusPanel status={status} />
           ) : (
             <Link
               href="/api/whoop/auth"
@@ -40,7 +43,7 @@ export default async function AppLayout({
         {/* Barra mobile */}
         <div className="flex items-center justify-between border-b border-border px-4 py-3 md:hidden">
           <span className="font-semibold">TrainerIA</span>
-          {connected && <SyncButton />}
+          {connected && <SyncStatusInline status={status} />}
         </div>
         <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
       </div>

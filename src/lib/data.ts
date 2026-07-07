@@ -111,6 +111,31 @@ export function getPlanned(limit = 60): Promise<PlannedSession[]> {
   }, []);
 }
 
+export interface SyncStatus {
+  whoopLast: string | null; // YYYY-MM-DD
+  garminLast: string | null; // YYYY-MM-DD
+}
+
+/** Última fecha de dato de cada fuente, para mostrar el estado de actualización. */
+export function getSyncStatus(): Promise<SyncStatus> {
+  return safe<SyncStatus>(async () => {
+    const db = getAdminClient();
+    const [w, g] = await Promise.all([
+      db.from("whoop_recovery").select("date").order("date", { ascending: false }).limit(1),
+      db
+        .from("activities")
+        .select("started_at")
+        .eq("source", "garmin")
+        .order("started_at", { ascending: false })
+        .limit(1),
+    ]);
+    return {
+      whoopLast: (w.data?.[0]?.date as string) ?? null,
+      garminLast: (g.data?.[0]?.started_at as string)?.slice(0, 10) ?? null,
+    };
+  }, { whoopLast: null, garminLast: null });
+}
+
 export function getRehabLogs(limit = 60): Promise<RehabLog[]> {
   return safe(async () => {
     const db = getAdminClient();
