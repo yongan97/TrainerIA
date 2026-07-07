@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark mode por defecto: definimos las variables directamente en :root con
+   valores oscuros. .light permite un futuro toggle sin reescribir nada. */
+@layer base {
+  :root {
+    --background: 224 14% 8%;
+    --foreground: 210 20% 96%;
+
+    --card: 224 14% 11%;
+    --card-foreground: 210 20% 96%;
+
+    --primary: 152 60% 45%;
+    --primary-foreground: 152 40% 8%;
+
+    --secondary: 224 12% 16%;
+    --secondary-foreground: 210 20% 96%;
+
+    --muted: 224 12% 16%;
+    --muted-foreground: 216 12% 60%;
+
+    --accent: 224 12% 18%;
+    --accent-foreground: 210 20% 96%;
+
+    --border: 224 12% 18%;
+    --input: 224 12% 18%;
+    --ring: 152 60% 45%;
+
+    --sport-bike: 199 89% 55%; /* cian: bici */
+    --sport-run: 25 95% 58%;   /* naranja: running */
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
