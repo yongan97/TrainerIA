@@ -26,14 +26,13 @@ const SECTIONS: { title: string | null; links: { href: string; label: string; ic
     title: null,
     links: [
       { href: "/overview", label: "Hoy", icon: LayoutDashboard },
-      { href: "/alerts", label: "Alertas", icon: Bell },
+      { href: "/week", label: "Semana", icon: CalendarRange },
     ],
   },
   {
     title: "Entrenamiento",
     links: [
       { href: "/calendar", label: "Calendario", icon: CalendarDays },
-      { href: "/week", label: "Semana", icon: CalendarRange },
       { href: "/plan", label: "Plan", icon: ClipboardList },
       { href: "/race", label: "Carrera", icon: Flag },
     ],
@@ -52,6 +51,7 @@ const SECTIONS: { title: string | null; links: { href: string; label: string; ic
   {
     title: "Salud",
     links: [
+      { href: "/alerts", label: "Alertas", icon: Bell },
       { href: "/sleep", label: "Sueño", icon: Moon },
       { href: "/rehab", label: "Rehab", icon: HeartPulse },
     ],

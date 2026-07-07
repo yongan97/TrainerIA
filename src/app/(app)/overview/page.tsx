@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, Moon, HeartPulse, Activity as ActivityIcon, Flame, CalendarClock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ArrowRight, Moon, HeartPulse, Activity as ActivityIcon, Flame, CalendarClock, CheckCircle2, AlertTriangle, CalendarRange } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { SetupNotice } from "@/components/ui/setup-notice";
 import { SportBadge } from "@/components/sport-badge";
-import { isConfigured, isWhoopConnected, getHomeData, getCoachContext, getSettings } from "@/lib/data";
+import { isConfigured, isWhoopConnected, getHomeData, getCoachContext, getSettings, getMorningExtras } from "@/lib/data";
 import { dailyBrief } from "@/lib/coach";
 import { CoachCard } from "@/components/coach-card";
+import { RecoverySparkline } from "@/components/recovery-sparkline";
 import { fmt, fmtDuration, fmtDistance, recoveryColor } from "@/lib/format";
 import type { PlannedSession } from "@/lib/domain/types";
 
@@ -44,7 +45,7 @@ export default async function OverviewPage() {
   }
   const connected = await isWhoopConnected();
   const today = new Date().toISOString().slice(0, 10);
-  const [home, coachCtx, settings] = await Promise.all([getHomeData(today), getCoachContext(today), getSettings()]);
+  const [home, coachCtx, settings, morning] = await Promise.all([getHomeData(today), getCoachContext(today), getSettings(), getMorningExtras(today)]);
   const brief = dailyBrief(coachCtx);
   const daysToRace =
     settings?.goal_date != null
@@ -86,24 +87,31 @@ export default async function OverviewPage() {
       {/* RECOMENDACIÓN DEL COACH */}
       {connected && <CoachCard brief={brief} />}
 
-      {/* CÓMO ESTOY — hero */}
+      {/* CÓMO ESTOY — hero + tendencia de 7 días */}
       <Card className={`ring-1 ${toneRing[rd.tone]}`}>
-        <CardContent className="flex flex-col gap-6 py-6 sm:flex-row sm:items-center">
-          <div className="flex items-baseline gap-3">
-            <div className={`text-5xl font-bold tabular-nums sm:text-6xl ${recoveryColor(r?.recovery_score)}`}>
-              {fmt(r?.recovery_score)}
-              <span className="text-2xl font-normal text-muted-foreground">%</span>
+        <CardContent className="py-6">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+            <div className="flex items-baseline gap-3">
+              <div className={`text-5xl font-bold tabular-nums sm:text-6xl ${recoveryColor(r?.recovery_score)}`}>
+                {fmt(r?.recovery_score)}
+                <span className="text-2xl font-normal text-muted-foreground">%</span>
+              </div>
+              <div>
+                <div className={`text-lg font-semibold ${recoveryColor(r?.recovery_score)}`}>{rd.label}</div>
+                <div className="max-w-[16rem] text-sm text-muted-foreground">{rd.advice}</div>
+              </div>
             </div>
-            <div>
-              <div className={`text-lg font-semibold ${recoveryColor(r?.recovery_score)}`}>{rd.label}</div>
-              <div className="max-w-[16rem] text-sm text-muted-foreground">{rd.advice}</div>
+            <div className="grid flex-1 grid-cols-3 gap-4 sm:border-l sm:border-border sm:pl-6">
+              <Mini icon={HeartPulse} label="HRV" value={fmt(r?.hrv_rmssd)} unit="ms" />
+              <Mini icon={ActivityIcon} label="FC reposo" value={fmt(r?.rhr)} unit="bpm" />
+              <Mini icon={Moon} label="Sueño" value={fmtDuration(home.sleepDurationS)} unit="" />
             </div>
           </div>
-          <div className="grid flex-1 grid-cols-3 gap-4 sm:border-l sm:border-border sm:pl-6">
-            <Mini icon={HeartPulse} label="HRV" value={fmt(r?.hrv_rmssd)} unit="ms" />
-            <Mini icon={ActivityIcon} label="FC reposo" value={fmt(r?.rhr)} unit="bpm" />
-            <Mini icon={Moon} label="Sueño" value={fmtDuration(home.sleepDurationS)} unit="" />
-          </div>
+          {morning.last7.length > 0 && (
+            <div className="mt-6 border-t border-border pt-5">
+              <RecoverySparkline data={morning.last7} />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -183,7 +191,37 @@ export default async function OverviewPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* MI SEMANA */}
+      {connected && (
+        <Card className="mt-6">
+          <CardContent className="py-5">
+            <div className="mb-4 flex items-center justify-between">
+              <SectionTitle icon={CalendarRange}>Mi semana</SectionTitle>
+              <Link href="/week" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                Ver semana <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <WeekStat label="Volumen" value={`${morning.weekVolMin}′`} hint={`${morning.weekRunMin}′ run · ${morning.weekBikeMin}′ bici`} />
+              <WeekStat label="Sesiones" value={String(morning.weekSessions)} hint="esta semana" />
+              <WeekStat label="Adherencia" value={morning.weekAdherence != null ? `${morning.weekAdherence}%` : "—"} hint="del plan" />
+              <WeekStat label="Recovery medio" value={morning.weekAvgRecovery != null ? `${morning.weekAvgRecovery}%` : "—"} className={recoveryColor(morning.weekAvgRecovery)} hint="de la semana" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </Page>
+  );
+}
+
+function WeekStat({ label, value, hint, className }: { label: string; value: string; hint: string; className?: string }) {
+  return (
+    <div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={`mt-0.5 text-2xl font-semibold tabular-nums ${className ?? ""}`}>{value}</div>
+      <div className="text-[11px] text-muted-foreground/70">{hint}</div>
+    </div>
   );
 }
 

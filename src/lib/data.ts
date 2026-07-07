@@ -231,6 +231,61 @@ export function getCoachContext(today: string): Promise<CoachContext> {
   }, empty);
 }
 
+export interface MorningExtras {
+  last7: { date: string; score: number | null }[]; // asc, para sparkline
+  weekVolMin: number;
+  weekRunMin: number;
+  weekBikeMin: number;
+  weekSessions: number;
+  weekAdherence: number | null;
+  weekAvgRecovery: number | null;
+}
+
+/** Extras para el briefing matutino: tendencia de recovery + resumen de la semana. */
+export function getMorningExtras(today: string): Promise<MorningExtras> {
+  const empty: MorningExtras = { last7: [], weekVolMin: 0, weekRunMin: 0, weekBikeMin: 0, weekSessions: 0, weekAdherence: null, weekAvgRecovery: null };
+  // Semana actual (lunes a domingo)
+  const t = new Date(today + "T00:00:00Z");
+  const monday = new Date(t);
+  monday.setUTCDate(t.getUTCDate() - ((t.getUTCDay() + 6) % 7));
+  const mondayStr = monday.toISOString().slice(0, 10);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 7);
+  const sundayStr = sunday.toISOString().slice(0, 10);
+
+  return safe<MorningExtras>(async () => {
+    const db = getAdminClient();
+    const [recR, actR, plnR] = await Promise.all([
+      db.from("whoop_recovery").select("date, recovery_score").order("date", { ascending: false }).limit(10),
+      db.from("activities").select("sport, duration_s, started_at").gte("started_at", mondayStr).lt("started_at", sundayStr),
+      db.from("planned_sessions").select("sport, date").gte("date", mondayStr).lt("date", sundayStr),
+    ]);
+
+    const recs = (recR.data ?? []) as Array<{ date: string; recovery_score: number | null }>;
+    const last7 = [...recs].slice(0, 7).reverse().map((r) => ({ date: r.date, score: r.recovery_score }));
+
+    const acts = (actR.data ?? []) as Array<{ sport: string; duration_s: number | null; started_at: string }>;
+    const runMin = acts.filter((a) => a.sport === "run").reduce((s, a) => s + (a.duration_s ?? 0) / 60, 0);
+    const bikeMin = acts.filter((a) => a.sport === "bike").reduce((s, a) => s + (a.duration_s ?? 0) / 60, 0);
+
+    const plans = (plnR.data ?? []) as Array<{ sport: string; date: string }>;
+    const pastPlans = plans.filter((p) => p.date <= today);
+    const done = pastPlans.filter((p) => acts.some((a) => a.started_at.slice(0, 10) === p.date && a.sport === p.sport)).length;
+
+    const weekRecs = recs.filter((r) => r.date >= mondayStr && r.date < sundayStr && r.recovery_score != null).map((r) => r.recovery_score as number);
+
+    return {
+      last7,
+      weekVolMin: Math.round(runMin + bikeMin),
+      weekRunMin: Math.round(runMin),
+      weekBikeMin: Math.round(bikeMin),
+      weekSessions: acts.filter((a) => a.sport === "run" || a.sport === "bike").length,
+      weekAdherence: pastPlans.length ? Math.round((done / pastPlans.length) * 100) : null,
+      weekAvgRecovery: weekRecs.length ? Math.round(weekRecs.reduce((a, b) => a + b, 0) / weekRecs.length) : null,
+    };
+  }, empty);
+}
+
 export interface SyncStatus {
   whoopLast: string | null; // YYYY-MM-DD
   garminLast: string | null; // YYYY-MM-DD
