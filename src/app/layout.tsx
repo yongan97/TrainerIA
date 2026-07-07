@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TrainerIA",
+  title: { default: "TrainerIA", template: "%s · TrainerIA" },
   description:
     "Dashboard personal de training: Whoop + Garmin + plan del entrenador.",
 };

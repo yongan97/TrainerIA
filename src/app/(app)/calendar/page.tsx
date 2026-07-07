@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { SportBadge } from "@/components/sport-badge";
+import { MonthCalendar, type DayCell } from "@/components/month-calendar";
 import { isConfigured, getActivities, getPlanned, getDailySummary } from "@/lib/data";
 import { isIndoorBike } from "@/lib/activities";
 import { fmt, fmtDate, fmtDuration, recoveryColor } from "@/lib/format";
@@ -52,6 +53,32 @@ export default async function CalendarPage() {
     );
   }
 
+  // Grilla del mes actual
+  const recByDay = new Map(daily.map((d) => [d.date, d.recovery_score]));
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const first = new Date(Date.UTC(year, month, 1));
+  const offset = (first.getUTCDay() + 6) % 7; // lun=0
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const cells: (DayCell | null)[] = [];
+  for (let i = 0; i < offset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(Date.UTC(year, month, d)).toISOString().slice(0, 10);
+    cells.push({
+      date,
+      dayNum: d,
+      planned: planByDay.get(date) ?? [],
+      executed: actByDay.get(date) ?? [],
+      recovery: recByDay.get(date) ?? null,
+      isToday: date === today,
+    });
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks: (DayCell | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  const monthLabel = first.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+
   return (
     <Page>
       <div className="mb-6 grid grid-cols-3 gap-4">
@@ -60,6 +87,13 @@ export default async function CalendarPage() {
         <Stat label="Pendientes" value={String(pastPlanned.length - doneCount)} hint="planificadas sin ejecutar" />
       </div>
 
+      <Card className="mb-6">
+        <CardContent className="py-5">
+          <MonthCalendar weeks={weeks} label={monthLabel} />
+        </CardContent>
+      </Card>
+
+      <h2 className="mb-3 text-sm font-medium text-muted-foreground">Detalle por día</h2>
       <div className="space-y-3">
         {daily.map((day) => {
           const acts = actByDay.get(day.date) ?? [];
