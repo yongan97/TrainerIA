@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { SportBadge } from "@/components/sport-badge";
 import { HrZones } from "@/components/hr-zones";
+import { GarminSplits } from "@/components/charts/garmin-splits";
 import { getActivity, getRecovery, getPlanned } from "@/lib/data";
 import { getSport } from "@/lib/sports/registry";
 import { isIndoorBike } from "@/lib/activities";
@@ -125,6 +126,20 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
             <HrZones zones={activity.hr_zones} />
           </CardContent>
         </Card>
+
+        {/* Splits de Garmin (por vuelta) */}
+        {activity.source === "garmin" && activity.external_id?.startsWith("garmin:") && (
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-foreground">
+                {activity.sport === "bike" ? "Potencia por vuelta" : "Ritmo por vuelta"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GarminSplits id={activity.external_id.replace("garmin:", "")} sport={activity.sport} />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </>
   );

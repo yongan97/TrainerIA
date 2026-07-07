@@ -108,3 +108,44 @@ export async function fetchGarminActivities(limit = 20) {
   const acts = (await gc.getActivities(0, limit)) as unknown as GAct[];
   return acts.map(mapGarminActivity).filter((a) => a.started_at && a.external_id);
 }
+
+export interface Split {
+  index: number;
+  distance_m: number | null;
+  duration_s: number | null;
+  avg_hr: number | null;
+  avg_power: number | null;
+  avg_pace_s_per_km: number | null;
+  elevation_gain_m: number | null;
+}
+
+/**
+ * Trae los splits por vuelta de una actividad de Garmin (endpoint no oficial
+ * activity-service). Defensivo: si falla, devuelve lista vacía.
+ */
+export async function fetchGarminSplits(activityId: string): Promise<Split[]> {
+  const cfg = garminConfigured();
+  if (!cfg.ok) return [];
+  try {
+    const gc = await loginClient();
+    const base = (gc as unknown as { url: { ACTIVITY: string } }).url.ACTIVITY;
+    const res = (await gc.get(`${base}${activityId}/splits`)) as { lapDTOs?: GAct[] };
+    const laps = res?.lapDTOs ?? [];
+    return laps.map((lap, i) => {
+      const dist = num(lap.distance);
+      const dur = num(lap.duration) ?? num(lap.elapsedDuration);
+      const speed = num(lap.averageSpeed); // m/s
+      return {
+        index: i + 1,
+        distance_m: dist,
+        duration_s: dur,
+        avg_hr: num(lap.averageHR),
+        avg_power: num(lap.averagePower),
+        avg_pace_s_per_km: speed && speed > 0 ? 1000 / speed : dist && dur && dist > 0 ? dur / (dist / 1000) : null,
+        elevation_gain_m: num(lap.elevationGain),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
