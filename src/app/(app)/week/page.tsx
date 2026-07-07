@@ -2,6 +2,7 @@ import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetupNotice } from "@/components/ui/setup-notice";
 import { WeeklyLoad, type WeeklyLoadPoint } from "@/components/charts/weekly-load";
+import { ConsistencyHeatmap, type HeatDay } from "@/components/consistency-heatmap";
 import { isConfigured, getActivities, getRecovery, getCycles, getSleep, getPlanned } from "@/lib/data";
 import { minutesOf } from "@/lib/activities";
 
@@ -76,6 +77,22 @@ export default async function WeekPage() {
     chart.push({ label: m.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }), run: a.runMin, bike: a.bikeMin });
   }
 
+  // Mapa de calor de consistencia (últimos ~112 días)
+  const minByDay = new Map<string, number>();
+  for (const a of activities) {
+    if (a.sport !== "run" && a.sport !== "bike") continue;
+    const d = a.started_at.slice(0, 10);
+    minByDay.set(d, (minByDay.get(d) ?? 0) + minutesOf(a));
+  }
+  const heat: HeatDay[] = [];
+  const base = new Date();
+  for (let i = 111; i >= 0; i--) {
+    const d = new Date(base);
+    d.setUTCDate(base.getUTCDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    heat.push({ date: key, minutes: minByDay.get(key) ?? 0 });
+  }
+
   return (
     <Page>
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -91,13 +108,23 @@ export default async function WeekPage() {
         <Simple label="Adherencia" value={cur.adherence != null ? `${cur.adherence}%` : "—"} />
       </div>
 
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-foreground">Volumen por semana (8 semanas)</CardTitle>
           <p className="text-xs text-muted-foreground">Minutos por deporte, apilado</p>
         </CardHeader>
         <CardContent>
           <WeeklyLoad data={chart} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground">Consistencia (16 semanas)</CardTitle>
+          <p className="text-xs text-muted-foreground">Cada celda es un día; más verde = más minutos</p>
+        </CardHeader>
+        <CardContent>
+          <ConsistencyHeatmap days={heat} />
         </CardContent>
       </Card>
     </Page>
