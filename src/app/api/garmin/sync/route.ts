@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { garminConfigured, fetchGarminActivities } from "@/lib/garmin/connect";
+import { reconcileActivities } from "@/lib/reconcile";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -25,9 +26,11 @@ export async function POST(req: NextRequest) {
         .upsert(rows, { onConflict: "external_id" });
       if (error) throw new Error(error.message);
     }
+    const reconciled = await reconcileActivities();
     return NextResponse.json({
       ok: true,
       imported: rows.length,
+      reconciled,
       sports: rows.reduce<Record<string, number>>((acc, r) => {
         acc[r.sport] = (acc[r.sport] ?? 0) + 1;
         return acc;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncWhoop } from "@/lib/whoop/sync";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { garminConfigured, fetchGarminActivities } from "@/lib/garmin/connect";
+import { reconcileActivities } from "@/lib/reconcile";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -39,7 +40,8 @@ export async function GET(req: NextRequest) {
       syncWhoop(),
       syncGarminBestEffort(),
     ]);
-    return NextResponse.json({ ok: true, whoop, garmin });
+    const reconciled = await reconcileActivities();
+    return NextResponse.json({ ok: true, whoop, garmin, reconciled });
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: e instanceof Error ? e.message : "error" },
