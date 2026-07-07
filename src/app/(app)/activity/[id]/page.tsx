@@ -6,6 +6,7 @@ import { Stat } from "@/components/ui/stat";
 import { SportBadge } from "@/components/sport-badge";
 import { HrZones } from "@/components/hr-zones";
 import { GarminSplits } from "@/components/charts/garmin-splits";
+import { FeedbackForm } from "@/components/forms/feedback-form";
 import { getActivity, getRecovery, getPlanned, getSettings } from "@/lib/data";
 import { getSport } from "@/lib/sports/registry";
 import { isIndoorBike } from "@/lib/activities";
@@ -139,6 +140,25 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
           </CardHeader>
           <CardContent>
             <HrZones zones={activity.hr_zones} />
+          </CardContent>
+        </Card>
+
+        {/* Sensaciones (RPE) */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-foreground">Sensaciones</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {activity.rpe != null && activity.strain != null && (
+              <p className="mb-4 rounded-md border border-border bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
+                {activity.rpe * 2.1 > activity.strain * 1.25
+                  ? "Lo sentiste más duro de lo que muestra el strain — puede ser fatiga acumulada o mal descanso."
+                  : activity.rpe * 2.1 < activity.strain * 0.75
+                    ? "Lo sentiste más fácil de lo que muestra el strain — buena señal de forma."
+                    : "Tu esfuerzo percibido coincide con el strain fisiológico."}
+              </p>
+            )}
+            <FeedbackForm activityId={activity.id} initialRpe={activity.rpe} initialFeel={activity.feel} initialNotes={activity.user_notes} />
           </CardContent>
         </Card>
 

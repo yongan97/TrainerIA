@@ -19,6 +19,9 @@ export interface Activity {
   metrics: Record<string, number | null> | null; // específico por deporte
   external_id: string | null;
   raw: unknown;
+  rpe: number | null; // esfuerzo percibido 1-10
+  feel: string | null; // cómo se sintió
+  user_notes: string | null;
   created_at: string;
 }
 
