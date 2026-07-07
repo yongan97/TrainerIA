@@ -55,11 +55,9 @@ export async function reconcileActivities(): Promise<{
     if (!match) continue;
     usedPrimary.add(match.id);
     toDelete.push(w.id);
-    // Copiamos de Whoop lo que Garmin no tiene: strain y zonas de FC.
-    const patch: { id: string; strain?: number; hr_zones?: Record<string, number> } = { id: match.id };
-    if (w.strain != null && match.strain == null) patch.strain = w.strain;
-    if (w.hr_zones != null && match.hr_zones == null) patch.hr_zones = w.hr_zones;
-    if (patch.strain != null || patch.hr_zones != null) updates.push(patch);
+    // Copiamos de Whoop lo que Garmin no tiene: el strain. (Las zonas de FC las
+    // aporta Garmin directamente; las de Whoop v2 vienen vacías.)
+    if (w.strain != null && match.strain == null) updates.push({ id: match.id, strain: w.strain });
   }
 
   const strainUpdates = updates; // (compat de nombre de retorno)

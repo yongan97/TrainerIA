@@ -93,6 +93,18 @@ export function mapGarminActivity(a: GAct) {
 
   const avgHr = num(a.averageHR);
   const maxHr = num(a.maxHR);
+  // Zonas de FC de Garmin (hrTimeInZone_1..5, en segundos -> ms).
+  const zSec = (n: number) => num(a[`hrTimeInZone_${n}`]);
+  const hasZones = [1, 2, 3, 4, 5].some((n) => (zSec(n) ?? 0) > 0);
+  const hrZones = hasZones
+    ? {
+        zone_1_ms: Math.round((zSec(1) ?? 0) * 1000),
+        zone_2_ms: Math.round((zSec(2) ?? 0) * 1000),
+        zone_3_ms: Math.round((zSec(3) ?? 0) * 1000),
+        zone_4_ms: Math.round((zSec(4) ?? 0) * 1000),
+        zone_5_ms: Math.round((zSec(5) ?? 0) * 1000),
+      }
+    : null;
   return {
     sport: sport ?? typeKey, // canónico (bike/run) o el typeKey real de Garmin
     source: "garmin" as const,
@@ -102,7 +114,7 @@ export function mapGarminActivity(a: GAct) {
     elevation_gain_m: num(a.elevationGain),
     avg_hr: avgHr ? Math.round(avgHr) : null,
     max_hr: maxHr ? Math.round(maxHr) : null,
-    hr_zones: null,
+    hr_zones: hrZones,
     load: null,
     strain: null,
     metrics,
