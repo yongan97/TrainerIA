@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Activity } from "lucide-react";
-import { Nav } from "@/components/nav";
+import { Nav, NavMobile } from "@/components/nav";
 import { SyncStatusPanel, SyncStatusInline } from "@/components/sync-status";
 import { isWhoopConnected, getSyncStatus } from "@/lib/data";
 
@@ -41,9 +41,12 @@ export default async function AppLayout({
       {/* Contenido */}
       <div className="flex-1">
         {/* Barra mobile */}
-        <div className="flex items-center justify-between border-b border-border px-4 py-3 md:hidden">
-          <span className="font-semibold">TrainerIA</span>
-          {connected && <SyncStatusInline status={status} />}
+        <div className="border-b border-border px-4 py-3 md:hidden">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-semibold">TrainerIA</span>
+            {connected && <SyncStatusInline status={status} />}
+          </div>
+          <NavMobile />
         </div>
         <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
       </div>
