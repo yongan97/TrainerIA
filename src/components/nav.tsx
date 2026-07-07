@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Gauge,
   Moon,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ const LINKS = [
   { href: "/sleep", label: "Sueño", icon: Moon },
   { href: "/plan", label: "Plan", icon: ClipboardList },
   { href: "/rehab", label: "Rehab", icon: HeartPulse },
+  { href: "/records", label: "Marcas", icon: Trophy },
 ];
 
 export function Nav() {
