@@ -28,8 +28,10 @@
     --input: 224 12% 18%;
     --ring: 152 60% 45%;
 
-    --sport-bike: 199 89% 55%; /* cian: bici */
-    --sport-run: 25 95% 58%;   /* naranja: running */
+    --sport-bike: 203 66% 49%; /* cian-azul: bici (validado dark) */
+    --sport-run: 25 74% 47%;   /* naranja: running (validado dark) */
+    --chart-hrv: 255 68% 66%;  /* violeta: HRV */
+    --chart-load: 152 60% 42%; /* verde: recovery/carga */
 
     --radius: 0.75rem;
   }
