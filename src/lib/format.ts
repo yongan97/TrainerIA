@@ -11,8 +11,9 @@ export function fmtDuration(seconds: number | null | undefined): string {
 
 export function fmtPace(secondsPerKm: number | null | undefined): string {
   if (secondsPerKm == null) return "—";
-  const m = Math.floor(secondsPerKm / 60);
-  const s = Math.round(secondsPerKm % 60);
+  const total = Math.round(secondsPerKm); // redondear primero evita ":60"
+  const m = Math.floor(total / 60);
+  const s = total % 60;
   return `${m}:${s.toString().padStart(2, "0")}/km`;
 }
 

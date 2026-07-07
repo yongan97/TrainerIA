@@ -18,8 +18,9 @@ const axis = { stroke: "hsl(var(--muted-foreground))", fontSize: 11, tickLine: f
 
 function pace(s: number | null): string {
   if (s == null) return "—";
-  const m = Math.floor(s / 60);
-  const sec = Math.round(s % 60);
+  const total = Math.round(s);
+  const m = Math.floor(total / 60);
+  const sec = total % 60;
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 

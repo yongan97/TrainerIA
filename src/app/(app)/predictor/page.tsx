@@ -14,15 +14,16 @@ const TARGETS = [
 ];
 
 function hms(sec: number): string {
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = Math.round(sec % 60);
+  const total = Math.round(sec);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
   return h > 0 ? `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}` : `${m}:${s.toString().padStart(2, "0")}`;
 }
 function pacePerKm(sec: number, meters: number): string {
-  const p = sec / (meters / 1000);
-  const m = Math.floor(p / 60);
-  const s = Math.round(p % 60);
+  const total = Math.round(sec / (meters / 1000));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
   return `${m}:${s.toString().padStart(2, "0")}/km`;
 }
 
