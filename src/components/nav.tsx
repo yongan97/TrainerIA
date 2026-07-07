@@ -16,11 +16,18 @@ import {
   Flame,
   Wind,
   Timer,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SECTIONS: { title: string | null; links: { href: string; label: string; icon: typeof LayoutDashboard }[] }[] = [
-  { title: null, links: [{ href: "/overview", label: "Hoy", icon: LayoutDashboard }] },
+  {
+    title: null,
+    links: [
+      { href: "/overview", label: "Hoy", icon: LayoutDashboard },
+      { href: "/alerts", label: "Alertas", icon: Bell },
+    ],
+  },
   {
     title: "Entrenamiento",
     links: [
