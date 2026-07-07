@@ -70,6 +70,26 @@ export default async function WeekPage() {
   const cur = aggregate(weekStart(0));
   const prev = aggregate(weekStart(1));
 
+  // Narrativa del entrenador
+  const parts: string[] = [];
+  const volDelta = prev.totalMin > 0 ? Math.round((cur.totalMin / prev.totalMin - 1) * 100) : null;
+  if (cur.totalMin > 0) {
+    parts.push(
+      volDelta == null
+        ? `Llevás ${cur.totalMin} min de entrenamiento en ${cur.sessions} sesiones.`
+        : `Entrenaste ${cur.totalMin} min (${volDelta >= 0 ? "+" : ""}${volDelta}% vs la semana pasada) en ${cur.sessions} sesiones.`,
+    );
+  } else {
+    parts.push("Semana tranquila: todavía sin volumen registrado.");
+  }
+  if (cur.runMin && cur.bikeMin) parts.push(`Repartido entre ${cur.runMin} min de running y ${cur.bikeMin} de bici.`);
+  if (cur.avgRec != null) parts.push(`Recovery promedio ${cur.avgRec}%${prev.avgRec != null ? (cur.avgRec >= prev.avgRec ? ", mejor que la semana previa" : ", algo por debajo de la previa") : ""}.`);
+  if (cur.avgSleepH != null) parts.push(`Dormiste ${cur.avgSleepH.toFixed(1)} h de media${cur.avgSleepH < 7.5 ? " — hay margen para descansar más" : ""}.`);
+  if (cur.adherence != null) parts.push(`Cumpliste el ${cur.adherence}% del plan.`);
+  if (volDelta != null && volDelta > 15) parts.push("Ojo con el salto de carga: subí de a poco para cuidar la rodilla.");
+  else if (cur.totalMin > 0 && cur.avgRec != null && cur.avgRec >= 60) parts.push("Buen equilibrio carga/recuperación: seguí así.");
+  const narrative = parts.join(" ");
+
   const chart: WeeklyLoadPoint[] = [];
   for (let i = 7; i >= 0; i--) {
     const m = weekStart(i);
@@ -95,6 +115,11 @@ export default async function WeekPage() {
 
   return (
     <Page>
+      <div className="mb-6 rounded-xl border border-border bg-card/60 p-5">
+        <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">Resumen del entrenador</div>
+        <p className="text-[15px] leading-relaxed">{narrative}</p>
+      </div>
+
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Delta label="Volumen" value={`${cur.totalMin} min`} cur={cur.totalMin} prev={prev.totalMin} />
         <Delta label="Sesiones" value={String(cur.sessions)} cur={cur.sessions} prev={prev.sessions} />
