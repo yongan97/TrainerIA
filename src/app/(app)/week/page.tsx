@@ -100,6 +100,19 @@ export default async function WeekPage() {
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 8);
 
+  // Recomendación de volumen para la próxima semana (regla del 10% + recovery)
+  const thisWeekRunKm = Math.round(
+    activities.filter((a) => a.sport === "run" && inWeek(a.started_at, thisMon)).reduce((s, a) => s + (a.distance_m ?? 0) / 1000, 0),
+  );
+  let nextWeekRec: string | null = null;
+  if (thisWeekRunKm >= 5) {
+    const good = (cur.avgRec ?? 0) >= 55;
+    const target = Math.round(thisWeekRunKm * (good ? 1.1 : 1.0));
+    nextWeekRec = good
+      ? `Venís bien (recovery medio ${cur.avgRec}%): la próxima semana podés subir el running a ~${target} km, sin pasarte del +10% para cuidar la rodilla.`
+      : `Recovery medio ${cur.avgRec ?? "—"}%: mantené ~${thisWeekRunKm} km de running la próxima semana antes de volver a subir.`;
+  }
+
   const chart: WeeklyLoadPoint[] = [];
   for (let i = 7; i >= 0; i--) {
     const m = weekStart(i);
@@ -129,6 +142,13 @@ export default async function WeekPage() {
         <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">Resumen del entrenador</div>
         <p className="text-[15px] leading-relaxed">{narrative}</p>
       </div>
+
+      {nextWeekRec && (
+        <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-5">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">Próxima semana</div>
+          <p className="text-[15px] leading-relaxed">{nextWeekRec}</p>
+        </div>
+      )}
 
       {upcoming.length > 0 && (
         <Card className="mb-6">
