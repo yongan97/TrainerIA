@@ -76,7 +76,7 @@ export default async function RacePage() {
     <Page>
       <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-6 text-center">
         <div className="text-sm text-muted-foreground">🎯 {settings.goal_name ?? "Carrera objetivo"} · {settings.goal_distance_km} km</div>
-        <div className="mt-2 text-5xl font-bold text-primary">{daysToRace <= 0 ? "¡Hoy!" : daysToRace}</div>
+        <div className="mt-2 text-4xl font-bold text-primary sm:text-5xl">{daysToRace <= 0 ? "¡Hoy!" : daysToRace}</div>
         {daysToRace > 0 && <div className="text-sm text-muted-foreground">días para la carrera · {new Date(settings.goal_date + "T00:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "2-digit", month: "long" })}</div>}
       </div>
 

@@ -139,8 +139,8 @@ export default async function RehabPage() {
           <EmptyState>Todavía no registraste días de rehab.</EmptyState>
         ) : (
           <Card>
-            <CardContent className="p-0">
-              <table className="w-full text-sm">
+            <CardContent className="overflow-x-auto p-0">
+              <table className="w-full min-w-[420px] text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="px-5 py-3 font-medium">Fecha</th>

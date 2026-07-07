@@ -90,7 +90,7 @@ export default async function OverviewPage() {
       <Card className={`ring-1 ${toneRing[rd.tone]}`}>
         <CardContent className="flex flex-col gap-6 py-6 sm:flex-row sm:items-center">
           <div className="flex items-baseline gap-3">
-            <div className={`text-6xl font-bold tabular-nums ${recoveryColor(r?.recovery_score)}`}>
+            <div className={`text-5xl font-bold tabular-nums sm:text-6xl ${recoveryColor(r?.recovery_score)}`}>
               {fmt(r?.recovery_score)}
               <span className="text-2xl font-normal text-muted-foreground">%</span>
             </div>

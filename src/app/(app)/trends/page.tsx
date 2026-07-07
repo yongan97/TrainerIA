@@ -92,7 +92,7 @@ export default async function TrendsPage() {
             <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="text-sm text-muted-foreground">Ratio carga aguda:crónica (ACWR)</div>
-                <div className={`text-4xl font-bold tabular-nums ${zoneColor[acwrStatus.zone]}`}>
+                <div className={`text-3xl font-bold tabular-nums sm:text-4xl ${zoneColor[acwrStatus.zone]}`}>
                   {acwrStatus.ratio == null ? "—" : acwrStatus.ratio.toFixed(2)}
                 </div>
                 <div className={`text-sm font-medium ${zoneColor[acwrStatus.zone]}`}>{acwrStatus.label}</div>

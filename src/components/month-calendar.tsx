@@ -34,7 +34,7 @@ export function MonthCalendar({ weeks, label }: { weeks: (DayCell | null)[][]; l
   return (
     <div>
       <div className="mb-2 text-sm font-medium capitalize">{label}</div>
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
         {DOW.map((d, i) => (
           <div key={i} className="pb-1 text-center text-[10px] font-medium uppercase text-muted-foreground/60">{d}</div>
         ))}
@@ -44,7 +44,7 @@ export function MonthCalendar({ weeks, label }: { weeks: (DayCell | null)[][]; l
           ) : (
             <div
               key={i}
-              className={`min-h-[68px] rounded-lg border border-border bg-card/40 p-1.5 ${recoveryTint(cell.recovery)} ${cell.isToday ? "ring-1 ring-primary/50" : ""}`}
+              className={`min-h-[54px] rounded-lg border border-border bg-card/40 p-1 sm:min-h-[68px] sm:p-1.5 ${recoveryTint(cell.recovery)} ${cell.isToday ? "ring-1 ring-primary/50" : ""}`}
             >
               <div className="mb-1 flex items-center justify-between">
                 <span className={`text-xs ${cell.isToday ? "font-bold text-primary" : "text-muted-foreground"}`}>{cell.dayNum}</span>
