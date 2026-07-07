@@ -1,6 +1,7 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { isConfigured, getActivities } from "@/lib/data";
+import { PaceScatter, type PacePoint } from "@/components/charts/pace-scatter";
 import { fmtDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -62,6 +63,12 @@ export default async function PredictorPage() {
     return { ...t, sec };
   });
 
+  const pacePts: PacePoint[] = runs.map((r) => ({
+    km: Math.round((r.distance_m! / 1000) * 10) / 10,
+    pace: r.duration_s! / (r.distance_m! / 1000),
+    date: fmtDate(r.started_at),
+  }));
+
   return (
     <Page>
       <Card className="mb-6">
@@ -85,6 +92,18 @@ export default async function PredictorPage() {
       <p className="mt-4 text-xs text-muted-foreground">
         La predicción asume entrenamiento específico para la distancia. A mayor distancia respecto a tu esfuerzo de referencia, mayor la incertidumbre.
       </p>
+
+      {pacePts.length >= 4 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-foreground">Tu perfil pace–distancia</CardTitle>
+            <p className="text-xs text-muted-foreground">Cada punto es una salida. Más arriba = más rápido. Muestra cómo aguantás el ritmo a más distancia.</p>
+          </CardHeader>
+          <CardContent>
+            <PaceScatter data={pacePts} />
+          </CardContent>
+        </Card>
+      )}
     </Page>
   );
 }
