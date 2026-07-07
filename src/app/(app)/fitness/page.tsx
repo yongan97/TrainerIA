@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { Vo2Chart, type Vo2Point } from "@/components/charts/vo2-chart";
+import { EfficiencyChart, type EffPoint } from "@/components/charts/efficiency-chart";
 import { isConfigured, getActivities } from "@/lib/data";
+import { trendArrow } from "@/lib/analytics";
 import { fmtDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +44,17 @@ export default async function FitnessPage() {
   const delta = latest - first;
   const bestTE = Math.max(...runsAsc.map((a) => m(a, "aerobic_te") ?? 0));
 
+  // Eficiencia aeróbica: velocidad (m/min) por latido, en corridas aeróbicas.
+  const effPts: EffPoint[] = activities
+    .filter((a) => a.sport === "run" && a.avg_hr && a.avg_hr <= 160 && (a.distance_m ?? 0) >= 3000 && (a.duration_s ?? 0) > 0)
+    .sort((x, y) => x.started_at.localeCompare(y.started_at))
+    .slice(-20)
+    .map((a) => ({
+      label: new Date(a.started_at).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }),
+      ef: Math.round((a.distance_m! / (a.duration_s! / 60) / a.avg_hr!) * 100) / 100,
+    }));
+  const effTrend = effPts.length >= 6 ? trendArrow(effPts.map((p) => p.ef), 3) : "flat";
+
   return (
     <Page>
       <div className="mb-6 grid grid-cols-3 gap-4">
@@ -58,6 +71,21 @@ export default async function FitnessPage() {
           <Vo2Chart data={points} />
         </CardContent>
       </Card>
+
+      {effPts.length >= 4 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-foreground">Eficiencia aeróbica</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Velocidad por latido en corridas fáciles (FC ≤160). Si sube, a igual esfuerzo corrés más rápido: estás mejorando.{" "}
+              {effTrend === "up" ? "↗ Vas mejorando." : effTrend === "down" ? "↘ Bajó últimamente." : "→ Estable."}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <EfficiencyChart data={effPts} />
+          </CardContent>
+        </Card>
+      )}
     </Page>
   );
 }
