@@ -3,6 +3,7 @@ import { Stat } from "@/components/ui/stat";
 import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { RehabForm } from "@/components/forms/rehab-form";
 import { RehabCharts, type RehabPoint, type WeekPoint } from "@/components/charts/rehab-charts";
+import { CadenceChart } from "@/components/charts/cadence-chart";
 import { isConfigured, getRehabLogs, getActivities } from "@/lib/data";
 import { fmt, fmtDate } from "@/lib/format";
 
@@ -96,6 +97,18 @@ export default async function RehabPage() {
   const lastWeekKm = weekly[weekly.length - 2]?.km ?? 0;
   const bumped = lastWeekKm > 0 && thisWeekKm > lastWeekKm * 1.1;
 
+  // Tendencia de cadencia de running (subir cadencia = menos impacto en la rodilla)
+  const cadencePts = activities
+    .filter((a) => a.sport === "run")
+    .filter((a) => typeof (a.metrics as Record<string, number | null> | null)?.avg_cadence_spm === "number")
+    .sort((x, y) => x.started_at.localeCompare(y.started_at))
+    .slice(-20)
+    .map((a) => ({
+      label: new Date(a.started_at).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }),
+      cadence: Math.round((a.metrics as Record<string, number>).avg_cadence_spm),
+    }));
+  const avgCad = cadencePts.length ? Math.round(cadencePts.reduce((s, p) => s + p.cadence, 0) / cadencePts.length) : null;
+
   return (
     <Page>
       {/* Insight de entrenador */}
@@ -121,6 +134,21 @@ export default async function RehabPage() {
           <Stat label="Racha de drills" value={String(streak)} suffix={streak === 1 ? "día" : "días"} hint="Glúteo/cadera consecutivos" />
         </div>
       </div>
+
+      {/* Cadencia de running (más cadencia = menos impacto) */}
+      {cadencePts.length >= 4 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-foreground">Cadencia de running</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Zona verde 170–185 spm. {avgCad != null && (avgCad < 170 ? `Venís en ${avgCad} spm — subir la cadencia (pasos más cortos) descarga la rodilla.` : `Venís en ${avgCad} spm — buena cadencia para cuidar el impacto.`)}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <CadenceChart data={cadencePts} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Registro diario */}
       <Card className="mt-6">
