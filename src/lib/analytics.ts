@@ -99,6 +99,23 @@ export function trainingStatus(ctlNow: number, ctlPrev: number, tsb: number): Tr
   return { label: "Manteniendo", advice: "Fitness estable. Para progresar, aumentá la carga gradualmente.", tone: "maintaining" };
 }
 
+/** Regresión lineal simple sobre puntos {x,y}. Devuelve pendiente, intercepto y r. */
+export function linreg(points: { x: number; y: number }[]): { slope: number; intercept: number; r: number } | null {
+  const n = points.length;
+  if (n < 5) return null;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0, syy = 0;
+  for (const p of points) {
+    sx += p.x; sy += p.y; sxy += p.x * p.y; sxx += p.x * p.x; syy += p.y * p.y;
+  }
+  const denom = n * sxx - sx * sx;
+  if (denom === 0) return null;
+  const slope = (n * sxy - sx * sy) / denom;
+  const intercept = (sy - slope * sx) / n;
+  const rDen = Math.sqrt(denom * (n * syy - sy * sy));
+  const r = rDen === 0 ? 0 : (n * sxy - sx * sy) / rDen;
+  return { slope, intercept, r };
+}
+
 /** Tendencia de una serie: pendiente simple (últimos n vs previos). */
 export function trendArrow(values: (number | null)[], window = 7): "up" | "down" | "flat" {
   const clean = values.filter((v): v is number => v != null);

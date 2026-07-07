@@ -2,8 +2,9 @@ import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { SleepTrend, SleepStages, type SleepPoint } from "@/components/charts/sleep-charts";
-import { isConfigured, getSleep } from "@/lib/data";
-import { rollingAvg } from "@/lib/analytics";
+import { CorrelationScatter, type CorrPoint } from "@/components/charts/correlation-scatter";
+import { isConfigured, getSleep, getRecovery } from "@/lib/data";
+import { rollingAvg, linreg } from "@/lib/analytics";
 import { fmtDuration } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export default async function SleepPage() {
     );
   }
 
-  const sleep = await getSleep(21);
+  const [sleep, recovery] = await Promise.all([getSleep(60), getRecovery(60)]);
   if (sleep.length === 0) {
     return (
       <Page>
@@ -27,7 +28,7 @@ export default async function SleepPage() {
   }
 
   const last = sleep[0];
-  const asc = [...sleep].reverse();
+  const asc = [...sleep.slice(0, 21)].reverse();
   const hoursArr = asc.map((s) => (s.duration_s != null ? s.duration_s / 3600 : null));
   const avgArr = rollingAvg(hoursArr, 7);
   const points: SleepPoint[] = asc.map((s, i) => ({
@@ -41,6 +42,14 @@ export default async function SleepPage() {
   const mean = avg7.length ? avg7.reduce((a, b) => a + b, 0) / avg7.length : null;
   // Deuda de sueño vs objetivo 8h (últimos 7 días)
   const debt = avg7.length ? avg7.reduce((s, h) => s + (8 - h), 0) : null;
+
+  // Correlación sueño -> recovery (mismo día): tu palanca personal
+  const recByDate = new Map(recovery.map((r) => [r.date, r.recovery_score]));
+  const corr: CorrPoint[] = sleep
+    .filter((s) => s.duration_s != null && recByDate.get(s.date) != null)
+    .map((s) => ({ x: s.duration_s! / 3600, y: recByDate.get(s.date) as number }));
+  const reg = linreg(corr);
+  const perHour = reg ? Math.round(reg.slope) : null; // % recovery por hora extra
 
   return (
     <Page>
@@ -67,6 +76,22 @@ export default async function SleepPage() {
         </Card>
         <SleepTrend data={points} />
       </div>
+
+      {corr.length >= 8 && reg && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-foreground">Sueño → Recovery (tu palanca)</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              {perHour != null && perHour > 0
+                ? `En tus datos, cada hora extra de sueño se asocia a ~${perHour}% más de recovery${Math.abs(reg.r) >= 0.4 ? " (relación clara)" : " (relación débil, es orientativo)"}.`
+                : "En tus datos la relación sueño-recovery es débil; puede pesar más el estrés o la carga."}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <CorrelationScatter data={corr} xLabel="Horas de sueño" yLabel="Recovery" xUnit=" h" yUnit="%" line={reg} />
+          </CardContent>
+        </Card>
+      )}
     </Page>
   );
 }
