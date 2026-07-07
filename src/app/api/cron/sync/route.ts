@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncWhoop } from "@/lib/whoop/sync";
+import { getAdminClient } from "@/lib/supabase/admin";
+import { garminConfigured, fetchGarminActivities } from "@/lib/garmin/connect";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+/** Sync de Garmin best-effort: nunca tira el cron si Garmin falla. */
+async function syncGarminBestEffort() {
+  if (!garminConfigured().ok) return { skipped: true };
+  try {
+    const rows = await fetchGarminActivities(30);
+    if (rows.length) {
+      const db = getAdminClient();
+      await db.from("activities").upsert(rows, { onConflict: "external_id" });
+    }
+    return { imported: rows.length };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+}
 
 /**
  * Endpoint de cron (Vercel). Protegido por CRON_SECRET: Vercel envía el header
@@ -18,8 +35,11 @@ export async function GET(req: NextRequest) {
     }
   }
   try {
-    const result = await syncWhoop();
-    return NextResponse.json({ ok: true, result });
+    const [whoop, garmin] = await Promise.all([
+      syncWhoop(),
+      syncGarminBestEffort(),
+    ]);
+    return NextResponse.json({ ok: true, whoop, garmin });
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: e instanceof Error ? e.message : "error" },
