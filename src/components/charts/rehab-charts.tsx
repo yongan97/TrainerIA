@@ -1,0 +1,99 @@
+"use client";
+
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Line,
+  Bar,
+  BarChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
+  Cell,
+} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const axis = { stroke: "hsl(var(--muted-foreground))", fontSize: 11, tickLine: false, axisLine: false };
+const PAIN = "#e0555f";
+const RUN = "#d1691f";
+
+export interface RehabPoint {
+  label: string;
+  pain: number | null;
+  runKm: number;
+}
+export interface WeekPoint {
+  label: string;
+  km: number;
+  over10: boolean;
+}
+
+function Tip({ active, payload, label, unit }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string; unit?: string }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-md border border-border bg-card px-3 py-2 text-xs shadow-lg">
+      <div className="mb-1 font-medium">{label}</div>
+      {payload.map((p) => (
+        <div key={p.name} className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: p.color }} />
+          <span className="text-muted-foreground">{p.name}:</span>
+          <span className="font-medium tabular-nums">{p.value == null ? "—" : Math.round(p.value * 10) / 10}{unit}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function RehabCharts({ daily, weekly }: { daily: RehabPoint[]; weekly: WeekPoint[] }) {
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground">Dolor de rodilla vs impacto</CardTitle>
+          <p className="text-xs text-muted-foreground">Línea = dolor (0–10, umbral 4) · barras = km de running (impacto)</p>
+        </CardHeader>
+        <CardContent>
+          <div className="h-60 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={daily} margin={{ top: 8, right: 12, left: -22, bottom: 0 }}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
+                <XAxis dataKey="label" {...axis} minTickGap={24} />
+                <YAxis domain={[0, 10]} {...axis} width={30} />
+                <Tooltip content={<Tip />} />
+                <ReferenceLine y={4} stroke={PAIN} strokeOpacity={0.5} strokeDasharray="4 3" />
+                <Bar dataKey="runKm" name="Running (km)" fill={RUN} fillOpacity={0.5} radius={[3, 3, 0, 0]} />
+                <Line type="monotone" dataKey="pain" name="Dolor" stroke={PAIN} strokeWidth={2.5} dot={{ r: 2 }} connectNulls />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground">Volumen semanal de running</CardTitle>
+          <p className="text-xs text-muted-foreground">Rojo = subiste &gt;10% vs la semana previa (regla del 10%)</p>
+        </CardHeader>
+        <CardContent>
+          <div className="h-60 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weekly} margin={{ top: 8, right: 12, left: -22, bottom: 0 }}>
+                <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
+                <XAxis dataKey="label" {...axis} />
+                <YAxis {...axis} width={30} />
+                <Tooltip content={<Tip unit=" km" />} cursor={{ fill: "hsl(var(--accent))", opacity: 0.3 }} />
+                <Bar dataKey="km" name="km" radius={[4, 4, 0, 0]}>
+                  {weekly.map((w, i) => (
+                    <Cell key={i} fill={w.over10 ? PAIN : RUN} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
