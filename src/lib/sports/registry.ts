@@ -80,3 +80,15 @@ export function mapWhoopSport(sportId: number | null | undefined): SportId | nul
   if (sportId == null) return null;
   return WHOOP_SPORT_ID_MAP[sportId] ?? null;
 }
+
+/**
+ * Mapea el typeKey de Garmin Connect al deporte de nuestro modelo.
+ * Cubre las variantes de bici y running; el resto se guarda con su typeKey real.
+ */
+export function mapGarminSport(typeKey: string | null | undefined): SportId | null {
+  const k = (typeKey ?? "").toLowerCase();
+  if (k.includes("run")) return "run"; // running, trail_running, treadmill_running
+  if (k.includes("cycl") || k.includes("bik") || k.includes("ride"))
+    return "bike"; // cycling, virtual_ride, indoor_cycling, road_biking, mountain_biking
+  return null;
+}
