@@ -3,7 +3,7 @@ import { ArrowRight, Moon, HeartPulse, Activity as ActivityIcon, Flame, Calendar
 import { Card, CardContent } from "@/components/ui/card";
 import { SetupNotice } from "@/components/ui/setup-notice";
 import { SportBadge } from "@/components/sport-badge";
-import { isConfigured, isWhoopConnected, getHomeData, getCoachContext } from "@/lib/data";
+import { isConfigured, isWhoopConnected, getHomeData, getCoachContext, getSettings } from "@/lib/data";
 import { dailyBrief } from "@/lib/coach";
 import { CoachCard } from "@/components/coach-card";
 import { fmt, fmtDuration, fmtDistance, recoveryColor } from "@/lib/format";
@@ -44,8 +44,12 @@ export default async function OverviewPage() {
   }
   const connected = await isWhoopConnected();
   const today = new Date().toISOString().slice(0, 10);
-  const [home, coachCtx] = await Promise.all([getHomeData(today), getCoachContext(today)]);
+  const [home, coachCtx, settings] = await Promise.all([getHomeData(today), getCoachContext(today), getSettings()]);
   const brief = dailyBrief(coachCtx);
+  const daysToRace =
+    settings?.goal_date != null
+      ? Math.ceil((new Date(settings.goal_date + "T00:00:00").getTime() - new Date(today + "T00:00:00").getTime()) / 86_400_000)
+      : null;
   const r = home.recovery;
   const rd = readiness(r?.recovery_score);
   const trained = home.trained.filter((a) => a.sport !== "increase_relaxation");
@@ -67,6 +71,16 @@ export default async function OverviewPage() {
           body="Autorizá el acceso para traer recovery, sueño, strain y entrenamientos."
           cta={{ href: "/api/whoop/auth", label: "Conectar Whoop" }}
         />
+      )}
+
+      {/* CUENTA REGRESIVA CARRERA */}
+      {daysToRace != null && daysToRace >= 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm">
+          <span className="text-muted-foreground">🎯 {settings?.goal_name ?? "Carrera objetivo"}</span>
+          <span className="font-semibold text-primary">
+            {daysToRace === 0 ? "¡Es hoy!" : `Faltan ${daysToRace} días`}
+          </span>
+        </div>
       )}
 
       {/* RECOMENDACIÓN DEL COACH */}

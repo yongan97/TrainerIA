@@ -69,6 +69,18 @@ export interface WhoopCycle {
   created_at: string;
 }
 
+export interface Settings {
+  id: number;
+  ftp: number | null;
+  lthr: number | null;
+  hr_max: number | null;
+  hr_rest: number | null;
+  weight_kg: number | null;
+  goal_name: string | null;
+  goal_date: string | null;
+  updated_at: string;
+}
+
 export interface RehabLog {
   id: string;
   date: string;

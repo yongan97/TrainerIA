@@ -273,6 +273,14 @@ export interface CycleRow {
   day_strain: number | null;
 }
 
+export function getSettings(): Promise<import("@/lib/domain/types").Settings | null> {
+  return safe(async () => {
+    const db = getAdminClient();
+    const { data } = await db.from("settings").select("*").eq("id", 1).maybeSingle();
+    return (data as import("@/lib/domain/types").Settings) ?? null;
+  }, null);
+}
+
 export function getCycles(limit = 60): Promise<CycleRow[]> {
   return safe(async () => {
     const db = getAdminClient();

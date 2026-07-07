@@ -6,7 +6,7 @@ import { Stat } from "@/components/ui/stat";
 import { SportBadge } from "@/components/sport-badge";
 import { HrZones } from "@/components/hr-zones";
 import { GarminSplits } from "@/components/charts/garmin-splits";
-import { getActivity, getRecovery, getPlanned } from "@/lib/data";
+import { getActivity, getRecovery, getPlanned, getSettings } from "@/lib/data";
 import { getSport } from "@/lib/sports/registry";
 import { isIndoorBike } from "@/lib/activities";
 import { fmt, fmtDate, fmtDistance, fmtDuration, fmtPace, recoveryColor } from "@/lib/format";
@@ -26,12 +26,23 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
   if (!activity) notFound();
 
   const day = activity.started_at.slice(0, 10);
-  const [recovery, planned] = await Promise.all([getRecovery(120), getPlanned(300)]);
+  const [recovery, planned, settings] = await Promise.all([getRecovery(120), getPlanned(300), getSettings()]);
   const rec = recovery.find((r) => r.date === day);
   const plan = planned.find((p) => p.date === day && p.sport === activity.sport);
   const sportCfg = getSport(activity.sport);
   const metrics = (activity.metrics ?? {}) as Record<string, number | null>;
   const indoor = isIndoorBike(activity);
+
+  // Métricas por potencia (bici) usando FTP de configuración.
+  let intensity: { if: number; tss: number } | null = null;
+  if (activity.sport === "bike" && settings?.ftp) {
+    const np = metrics.normalized_power ?? metrics.avg_power;
+    if (np && activity.duration_s) {
+      const ifv = np / settings.ftp;
+      const tss = ((activity.duration_s * np * ifv) / (settings.ftp * 3600)) * 100;
+      intensity = { if: Math.round(ifv * 100) / 100, tss: Math.round(tss) };
+    }
+  }
 
   return (
     <>
@@ -70,7 +81,11 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
         <Stat label="Duración" value={fmtDuration(activity.duration_s)} />
         <Stat label="Distancia" value={fmtDistance(activity.distance_m)} />
         <Stat label="FC media" value={fmt(activity.avg_hr)} suffix="bpm" />
-        <Stat label="Strain" value={fmt(activity.strain, 1)} />
+        {intensity ? (
+          <Stat label="TSS · IF" value={`${intensity.tss} · ${intensity.if}`} hint="por potencia (FTP)" />
+        ) : (
+          <Stat label="Strain" value={fmt(activity.strain, 1)} />
+        )}
       </section>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

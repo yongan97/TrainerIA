@@ -12,6 +12,7 @@ import {
   Moon,
   Trophy,
   CalendarRange,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ const SECTIONS: { title: string | null; links: { href: string; label: string; ic
       { href: "/rehab", label: "Rehab", icon: HeartPulse },
     ],
   },
+  { title: null, links: [{ href: "/settings", label: "Configuración", icon: Settings }] },
 ];
 
 const FLAT = SECTIONS.flatMap((s) => s.links);
