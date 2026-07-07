@@ -83,6 +83,13 @@ export default async function TrendsPage() {
   const strainReg = linreg(strainRecPairs);
   const perStrain = strainReg ? Math.round(strainReg.slope * 10) / 10 : null;
 
+  // Composición de recovery (30 días): salud de la recuperación de un vistazo
+  const rec30 = recovery.slice(0, 30).map((r) => r.recovery_score).filter((v): v is number => v != null);
+  const green = rec30.filter((s) => s >= 67).length;
+  const yellow = rec30.filter((s) => s >= 34 && s < 67).length;
+  const red = rec30.filter((s) => s < 34).length;
+  const rtot = rec30.length;
+
   const hasData = recovery.length > 0 || data.some((d) => d.run || d.bike);
 
   const zoneColor: Record<string, string> = {
@@ -118,6 +125,27 @@ export default async function TrendsPage() {
               )}
             </CardContent>
           </Card>
+
+          {rtot >= 5 && (
+            <Card className="mb-6">
+              <CardContent className="py-5">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-sm font-medium">Composición de recovery · {rtot} días</span>
+                  <span className="text-xs text-muted-foreground">{Math.round((green / rtot) * 100)}% en verde</span>
+                </div>
+                <div className="flex h-3 w-full overflow-hidden rounded-full">
+                  <div style={{ width: `${(green / rtot) * 100}%`, backgroundColor: "#2ba86a" }} />
+                  <div style={{ width: `${(yellow / rtot) * 100}%`, backgroundColor: "#eab308" }} />
+                  <div style={{ width: `${(red / rtot) * 100}%`, backgroundColor: "#e0555f" }} />
+                </div>
+                <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                  <span><span className="text-primary">●</span> {green} verdes</span>
+                  <span><span className="text-yellow-400">●</span> {yellow} amarillos</span>
+                  <span><span className="text-red-400">●</span> {red} rojos</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <TrendsCharts data={data} />
 
