@@ -27,6 +27,18 @@ export default async function SettingsPage() {
       <p className="mt-4 text-xs text-muted-foreground">
         El FTP habilita métricas por potencia (IF, TSS) en la bici. La FC umbral y máxima afinan las zonas. La carrera objetivo muestra la cuenta regresiva en el inicio.
       </p>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-foreground">Exportar datos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-3 text-sm text-muted-foreground">Descargá todas tus actividades en CSV. Son tuyos.</p>
+          <a href="/api/export" className="inline-flex items-center rounded-md border border-border bg-secondary px-4 py-2 text-sm font-medium hover:bg-accent">
+            Exportar actividades (CSV)
+          </a>
+        </CardContent>
+      </Card>
     </Page>
   );
 }
