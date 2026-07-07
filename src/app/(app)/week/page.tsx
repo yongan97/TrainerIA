@@ -1,0 +1,148 @@
+import { ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SetupNotice } from "@/components/ui/setup-notice";
+import { WeeklyLoad, type WeeklyLoadPoint } from "@/components/charts/weekly-load";
+import { isConfigured, getActivities, getRecovery, getCycles, getSleep, getPlanned } from "@/lib/data";
+import { minutesOf } from "@/lib/activities";
+
+export const dynamic = "force-dynamic";
+
+function mondayOf(d: Date): Date {
+  const x = new Date(d);
+  const day = (x.getUTCDay() + 6) % 7;
+  x.setUTCDate(x.getUTCDate() - day);
+  x.setUTCHours(0, 0, 0, 0);
+  return x;
+}
+
+export default async function WeekPage() {
+  if (!isConfigured()) {
+    return (
+      <Page>
+        <SetupNotice title="Falta configurar el entorno" body="Configurá Supabase para el resumen semanal." />
+      </Page>
+    );
+  }
+
+  const [activities, recovery, cycles, sleep, planned] = await Promise.all([
+    getActivities(600),
+    getRecovery(90),
+    getCycles(90),
+    getSleep(90),
+    getPlanned(300),
+  ]);
+
+  const thisMon = mondayOf(new Date());
+  const weekStart = (offset: number) => {
+    const d = new Date(thisMon);
+    d.setUTCDate(thisMon.getUTCDate() - offset * 7);
+    return d;
+  };
+  const inWeek = (dateStr: string, monday: Date) => {
+    const d = new Date(dateStr.length <= 10 ? dateStr + "T00:00:00Z" : dateStr);
+    const end = new Date(monday);
+    end.setUTCDate(monday.getUTCDate() + 7);
+    return d >= monday && d < end;
+  };
+
+  function aggregate(monday: Date) {
+    const acts = activities.filter((a) => inWeek(a.started_at, monday));
+    const run = acts.filter((a) => a.sport === "run").reduce((s, a) => s + minutesOf(a), 0);
+    const bike = acts.filter((a) => a.sport === "bike").reduce((s, a) => s + minutesOf(a), 0);
+    const recs = recovery.filter((r) => inWeek(r.date, monday)).map((r) => r.recovery_score).filter((v): v is number => v != null);
+    const sleeps = sleep.filter((s) => inWeek(s.date, monday)).map((s) => s.duration_s).filter((v): v is number => v != null);
+    const strain = cycles.filter((c) => inWeek(c.date, monday)).reduce((s, c) => s + (c.day_strain ?? 0), 0);
+    const plans = planned.filter((p) => inWeek(p.date, monday));
+    const done = plans.filter((p) => acts.some((a) => a.sport === p.sport)).length;
+    return {
+      sessions: acts.length,
+      runMin: Math.round(run),
+      bikeMin: Math.round(bike),
+      totalMin: Math.round(run + bike),
+      avgRec: recs.length ? Math.round(recs.reduce((a, b) => a + b, 0) / recs.length) : null,
+      avgSleepH: sleeps.length ? sleeps.reduce((a, b) => a + b, 0) / sleeps.length / 3600 : null,
+      strain: Math.round(strain),
+      adherence: plans.length ? Math.round((done / plans.length) * 100) : null,
+    };
+  }
+
+  const cur = aggregate(weekStart(0));
+  const prev = aggregate(weekStart(1));
+
+  const chart: WeeklyLoadPoint[] = [];
+  for (let i = 7; i >= 0; i--) {
+    const m = weekStart(i);
+    const a = aggregate(m);
+    chart.push({ label: m.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }), run: a.runMin, bike: a.bikeMin });
+  }
+
+  return (
+    <Page>
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Delta label="Volumen" value={`${cur.totalMin} min`} cur={cur.totalMin} prev={prev.totalMin} />
+        <Delta label="Sesiones" value={String(cur.sessions)} cur={cur.sessions} prev={prev.sessions} />
+        <Delta label="Recovery medio" value={cur.avgRec != null ? `${cur.avgRec}%` : "—"} cur={cur.avgRec ?? 0} prev={prev.avgRec ?? 0} />
+        <Delta label="Sueño medio" value={cur.avgSleepH != null ? `${cur.avgSleepH.toFixed(1)} h` : "—"} cur={cur.avgSleepH ?? 0} prev={prev.avgSleepH ?? 0} />
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <Simple label="Running" value={`${cur.runMin} min`} />
+        <Simple label="Ciclismo" value={`${cur.bikeMin} min`} />
+        <Simple label="Adherencia" value={cur.adherence != null ? `${cur.adherence}%` : "—"} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground">Volumen por semana (8 semanas)</CardTitle>
+          <p className="text-xs text-muted-foreground">Minutos por deporte, apilado</p>
+        </CardHeader>
+        <CardContent>
+          <WeeklyLoad data={chart} />
+        </CardContent>
+      </Card>
+    </Page>
+  );
+}
+
+function Delta({ label, value, cur, prev }: { label: string; value: string; cur: number; prev: number }) {
+  const diff = cur - prev;
+  const pct = prev > 0 ? Math.round((diff / prev) * 100) : null;
+  const up = diff > 0;
+  const flat = Math.abs(diff) < 0.01 || pct === 0;
+  const Icon = flat ? Minus : up ? ArrowUp : ArrowDown;
+  const color = flat ? "text-muted-foreground" : up ? "text-primary" : "text-red-400";
+  return (
+    <Card>
+      <CardContent className="py-4">
+        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
+        <div className={`mt-1 flex items-center gap-1 text-[11px] ${color}`}>
+          <Icon className="h-3 w-3" />
+          {pct != null ? `${pct > 0 ? "+" : ""}${pct}% vs sem. previa` : "vs sem. previa"}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+function Simple({ label, value }: { label: string; value: string }) {
+  return (
+    <Card>
+      <CardContent className="py-4">
+        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="mt-1 text-2xl font-semibold tabular-nums">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Page({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Semana</h1>
+        <p className="text-sm text-muted-foreground">Resumen semanal con comparación vs la semana previa.</p>
+      </header>
+      {children}
+    </>
+  );
+}

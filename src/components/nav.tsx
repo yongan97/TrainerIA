@@ -11,12 +11,14 @@ import {
   Gauge,
   Moon,
   Trophy,
+  CalendarRange,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/overview", label: "Overview", icon: LayoutDashboard },
   { href: "/calendar", label: "Calendario", icon: CalendarDays },
+  { href: "/week", label: "Semana", icon: CalendarRange },
   { href: "/trends", label: "Tendencias", icon: TrendingUp },
   { href: "/forma", label: "Forma", icon: Gauge },
   { href: "/sleep", label: "Sueño", icon: Moon },
