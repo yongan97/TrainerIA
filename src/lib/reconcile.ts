@@ -20,6 +20,7 @@ interface Row {
   sport: string;
   started_at: string;
   strain: number | null;
+  hr_zones: Record<string, number> | null;
 }
 
 export async function reconcileActivities(): Promise<{
@@ -31,9 +32,9 @@ export async function reconcileActivities(): Promise<{
   const [{ data: primaries }, { data: whoops }] = await Promise.all([
     db
       .from("activities")
-      .select("id,sport,started_at,strain")
+      .select("id,sport,started_at,strain,hr_zones")
       .in("source", ["garmin", "manual"]),
-    db.from("activities").select("id,sport,started_at,strain").eq("source", "whoop"),
+    db.from("activities").select("id,sport,started_at,strain,hr_zones").eq("source", "whoop"),
   ]);
 
   const prim = (primaries ?? []) as Row[];
@@ -41,7 +42,7 @@ export async function reconcileActivities(): Promise<{
 
   const usedPrimary = new Set<string>();
   const toDelete: string[] = [];
-  const strainUpdates: Array<{ id: string; strain: number }> = [];
+  const updates: Array<{ id: string; strain?: number; hr_zones?: Record<string, number> }> = [];
 
   for (const w of wh) {
     const wt = new Date(w.started_at).getTime();
@@ -54,14 +55,17 @@ export async function reconcileActivities(): Promise<{
     if (!match) continue;
     usedPrimary.add(match.id);
     toDelete.push(w.id);
-    // Copiamos el strain de Whoop si la fila de Garmin no lo tiene.
-    if (w.strain != null && match.strain == null) {
-      strainUpdates.push({ id: match.id, strain: w.strain });
-    }
+    // Copiamos de Whoop lo que Garmin no tiene: strain y zonas de FC.
+    const patch: { id: string; strain?: number; hr_zones?: Record<string, number> } = { id: match.id };
+    if (w.strain != null && match.strain == null) patch.strain = w.strain;
+    if (w.hr_zones != null && match.hr_zones == null) patch.hr_zones = w.hr_zones;
+    if (patch.strain != null || patch.hr_zones != null) updates.push(patch);
   }
 
-  for (const u of strainUpdates) {
-    await db.from("activities").update({ strain: u.strain }).eq("id", u.id);
+  const strainUpdates = updates; // (compat de nombre de retorno)
+  for (const u of updates) {
+    const { id, ...fields } = u;
+    await db.from("activities").update(fields).eq("id", id);
   }
   if (toDelete.length) {
     await db.from("activities").delete().in("id", toDelete);

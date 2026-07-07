@@ -1,19 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Stat } from "@/components/ui/stat";
 import { SportBadge } from "@/components/sport-badge";
-import { getActivity, getRecovery } from "@/lib/data";
+import { HrZones } from "@/components/hr-zones";
+import { getActivity, getRecovery, getPlanned } from "@/lib/data";
 import { getSport } from "@/lib/sports/registry";
-import {
-  fmt,
-  fmtDate,
-  fmtDistance,
-  fmtDuration,
-  fmtPace,
-  recoveryColor,
-} from "@/lib/format";
+import { isIndoorBike } from "@/lib/activities";
+import { fmt, fmtDate, fmtDistance, fmtDuration, fmtPace, recoveryColor } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -24,27 +19,22 @@ function fmtMetric(key: string, value: number | null): string {
   return Math.round(value).toString();
 }
 
-export default async function ActivityDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ActivityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const activity = await getActivity(id);
   if (!activity) notFound();
 
   const day = activity.started_at.slice(0, 10);
-  const recovery = await getRecovery(90);
+  const [recovery, planned] = await Promise.all([getRecovery(120), getPlanned(300)]);
   const rec = recovery.find((r) => r.date === day);
+  const plan = planned.find((p) => p.date === day && p.sport === activity.sport);
   const sportCfg = getSport(activity.sport);
   const metrics = (activity.metrics ?? {}) as Record<string, number | null>;
+  const indoor = isIndoorBike(activity);
 
   return (
     <>
-      <Link
-        href="/calendar"
-        className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
+      <Link href="/calendar" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver al calendario
       </Link>
 
@@ -53,28 +43,40 @@ export default async function ActivityDetailPage({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             {sportCfg?.label ?? activity.sport}
+            {indoor && <span className="ml-2 text-sm font-normal text-muted-foreground">· indoor</span>}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {fmtDate(activity.started_at)} · fuente {activity.source}
-          </p>
+          <p className="text-sm text-muted-foreground">{fmtDate(activity.started_at)} · fuente {activity.source}</p>
         </div>
       </header>
 
-      {/* Métricas comunes */}
+      {/* Objetivo vs real */}
+      {plan && (
+        <Card className="mb-6 border-primary/30">
+          <CardContent className="flex items-start gap-3 py-4">
+            <Target className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+            <div>
+              <div className="text-sm font-medium">Plan del día: {plan.type ?? "Sesión"}</div>
+              <p className="text-sm text-muted-foreground">
+                {(plan.targets as { notas?: string })?.notas ?? "—"}
+                {plan.target_duration_s ? ` · objetivo ${fmtDuration(plan.target_duration_s)}` : ""}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat label="Duración" value={fmtDuration(activity.duration_s)} />
         <Stat label="Distancia" value={fmtDistance(activity.distance_m)} />
         <Stat label="FC media" value={fmt(activity.avg_hr)} suffix="bpm" />
-        <Stat label="Desnivel+" value={fmt(activity.elevation_gain_m)} suffix="m" />
+        <Stat label="Strain" value={fmt(activity.strain, 1)} />
       </section>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        {/* Métricas específicas del deporte */}
+        {/* Métricas del deporte */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-foreground">
-              Métricas de {sportCfg?.label ?? "la actividad"}
-            </CardTitle>
+            <CardTitle className="text-foreground">Métricas de {sportCfg?.label ?? "la actividad"}</CardTitle>
           </CardHeader>
           <CardContent>
             {sportCfg ? (
@@ -84,47 +86,43 @@ export default async function ActivityDetailPage({
                     <dt className="text-xs text-muted-foreground">{m.label}</dt>
                     <dd className="text-lg font-semibold tabular-nums">
                       {fmtMetric(m.key, metrics[m.key] ?? null)}
-                      {m.unit && metrics[m.key] != null && (
-                        <span className="ml-1 text-xs font-normal text-muted-foreground">
-                          {m.unit}
-                        </span>
-                      )}
+                      {m.unit && metrics[m.key] != null && <span className="ml-1 text-xs font-normal text-muted-foreground">{m.unit}</span>}
                     </dd>
                   </div>
                 ))}
               </dl>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Deporte sin métricas específicas configuradas.
-              </p>
+              <p className="text-sm text-muted-foreground">Deporte sin métricas específicas.</p>
             )}
           </CardContent>
         </Card>
 
-        {/* Whoop de esa mañana (TOLERADO) */}
+        {/* Whoop de esa mañana */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-foreground">
-              Recovery de esa mañana (Whoop)
-            </CardTitle>
+            <CardTitle className="text-foreground">Recovery de esa mañana (Whoop)</CardTitle>
           </CardHeader>
           <CardContent>
             {rec ? (
               <div className="grid grid-cols-2 gap-4">
-                <Metric
-                  label="Recovery"
-                  value={`${fmt(rec.recovery_score)}%`}
-                  className={recoveryColor(rec.recovery_score)}
-                />
+                <Metric label="Recovery" value={`${fmt(rec.recovery_score)}%`} className={recoveryColor(rec.recovery_score)} />
                 <Metric label="HRV" value={`${fmt(rec.hrv_rmssd)} ms`} />
                 <Metric label="FC reposo" value={`${fmt(rec.rhr)} bpm`} />
                 <Metric label="SpO₂" value={`${fmt(rec.spo2, 1)}%`} />
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No hay recovery de Whoop para este día.
-              </p>
+              <p className="text-sm text-muted-foreground">No hay recovery de Whoop para este día.</p>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Zonas de FC */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-foreground">Distribución de frecuencia cardíaca</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <HrZones zones={activity.hr_zones} />
           </CardContent>
         </Card>
       </div>
@@ -132,21 +130,11 @@ export default async function ActivityDetailPage({
   );
 }
 
-function Metric({
-  label,
-  value,
-  className,
-}: {
-  label: string;
-  value: string;
-  className?: string;
-}) {
+function Metric({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div>
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`text-lg font-semibold tabular-nums ${className ?? ""}`}>
-        {value}
-      </div>
+      <div className={`text-lg font-semibold tabular-nums ${className ?? ""}`}>{value}</div>
     </div>
   );
 }
