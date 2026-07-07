@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { SportBadge } from "@/components/sport-badge";
 import { PlannedForm } from "@/components/forms/planned-form";
+import { MesoForm } from "@/components/forms/meso-form";
 import { GarminImport } from "@/components/forms/garmin-import";
 import { isConfigured, getPlanned } from "@/lib/data";
 import { fmtDate, fmtDuration } from "@/lib/format";
@@ -24,11 +25,21 @@ export default async function PlanPage() {
 
   return (
     <Page>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-foreground">Generar mesociclo</CardTitle>
+          <p className="text-xs text-muted-foreground">Cargá la progresión por semana (como el plan de John) y se expanden todas las sesiones.</p>
+        </CardHeader>
+        <CardContent>
+          <MesoForm />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-foreground">
-              Cargar sesión del entrenador
+              Cargar sesión suelta
             </CardTitle>
           </CardHeader>
           <CardContent>
