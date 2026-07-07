@@ -7,7 +7,7 @@ import { SportBadge } from "@/components/sport-badge";
 import { HrZones } from "@/components/hr-zones";
 import { GarminSplits } from "@/components/charts/garmin-splits";
 import { FeedbackForm } from "@/components/forms/feedback-form";
-import { getActivity, getRecovery, getPlanned, getSettings } from "@/lib/data";
+import { getActivity, getRecovery, getPlanned, getSettings, getActivities } from "@/lib/data";
 import { getSport } from "@/lib/sports/registry";
 import { isIndoorBike } from "@/lib/activities";
 import { fmt, fmtDate, fmtDistance, fmtDuration, fmtPace, recoveryColor } from "@/lib/format";
@@ -21,13 +21,23 @@ function fmtMetric(key: string, value: number | null): string {
   return Math.round(value).toString();
 }
 
+function deltaPace(thisV: number, ref: number): string {
+  const d = Math.round(thisV - ref);
+  if (d === 0) return "igual";
+  return d < 0 ? `${-d}s/km más rápido` : `${d}s/km más lento`;
+}
+
+function ordinal(n: number): string {
+  return n === 1 ? "1ª" : n === 2 ? "2ª" : n === 3 ? "3ª" : `${n}ª`;
+}
+
 export default async function ActivityDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const activity = await getActivity(id);
   if (!activity) notFound();
 
   const day = activity.started_at.slice(0, 10);
-  const [recovery, planned, settings] = await Promise.all([getRecovery(120), getPlanned(300), getSettings()]);
+  const [recovery, planned, settings, allActs] = await Promise.all([getRecovery(120), getPlanned(300), getSettings(), getActivities(1000)]);
   const rec = recovery.find((r) => r.date === day);
   const plan = planned.find((p) => p.date === day && p.sport === activity.sport);
   const sportCfg = getSport(activity.sport);
@@ -42,6 +52,33 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
       const ifv = np / settings.ftp;
       const tss = ((activity.duration_s * np * ifv) / (settings.ftp * 3600)) * 100;
       intensity = { if: Math.round(ifv * 100) / 100, tss: Math.round(tss) };
+    }
+  }
+
+  // Comparación con salidas similares (misma distancia ±20%)
+  let comparison: { rank: number; total: number; label: string; value: string; vsBest: string; vsAvg: string } | null = null;
+  const dist = activity.distance_m;
+  if ((activity.sport === "run" || activity.sport === "bike") && dist && dist > 0) {
+    const similar = allActs.filter((a) => a.sport === activity.sport && a.distance_m && Math.abs(a.distance_m - dist) / dist <= 0.2 && a.duration_s);
+    if (similar.length >= 3) {
+      if (activity.sport === "run") {
+        const paceOf = (a: typeof activity) => a.duration_s! / (a.distance_m! / 1000); // s/km, menor mejor
+        const sorted = [...similar].sort((x, y) => paceOf(x) - paceOf(y));
+        const rank = sorted.findIndex((s) => s.id === activity.id) + 1;
+        const best = paceOf(sorted[0]);
+        const avg = similar.reduce((s, a) => s + paceOf(a), 0) / similar.length;
+        const thisV = paceOf(activity);
+        comparison = { rank, total: similar.length, label: "por ritmo", value: fmtPace(thisV), vsBest: deltaPace(thisV, best), vsAvg: deltaPace(thisV, avg) };
+      } else {
+        const spdOf = (a: typeof activity) => a.distance_m! / 1000 / (a.duration_s! / 3600); // km/h, mayor mejor
+        const sorted = [...similar].sort((x, y) => spdOf(y) - spdOf(x));
+        const rank = sorted.findIndex((s) => s.id === activity.id) + 1;
+        const best = spdOf(sorted[0]);
+        const avg = similar.reduce((s, a) => s + spdOf(a), 0) / similar.length;
+        const thisV = spdOf(activity);
+        const dS = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} km/h`;
+        comparison = { rank, total: similar.length, label: "por velocidad", value: `${thisV.toFixed(1)} km/h`, vsBest: dS(thisV - best), vsAvg: dS(thisV - avg) };
+      }
     }
   }
 
@@ -73,6 +110,21 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
                 {(plan.targets as { notas?: string })?.notas ?? "—"}
                 {plan.target_duration_s ? ` · objetivo ${fmtDuration(plan.target_duration_s)}` : ""}
               </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ¿Cómo estuvo esta salida? */}
+      {comparison && (
+        <Card className="mb-6">
+          <CardContent className="py-4">
+            <div className="text-sm">
+              <span className="font-medium">
+                {comparison.rank === 1 ? "🏆 Tu mejor salida " : `${ordinal(comparison.rank)} mejor `}
+                {comparison.label}
+              </span>
+              <span className="text-muted-foreground"> entre {comparison.total} de distancia similar. {comparison.value} · {comparison.vsAvg} que tu promedio{comparison.rank !== 1 ? `, ${comparison.vsBest} que tu mejor` : ""}.</span>
             </div>
           </CardContent>
         </Card>
