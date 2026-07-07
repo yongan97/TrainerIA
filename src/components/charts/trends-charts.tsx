@@ -154,7 +154,7 @@ export function TrendsCharts({ data }: { data: TrendPoint[] }) {
       <ChartCard title="Tolerancia: recovery vs strain" subtitle="Cada punto = un día. Abajo-derecha (mucho strain, poco recovery) = te costó" full>
         <ScatterChart margin={{ top: 8, right: 12, left: -18, bottom: 4 }}>
           <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} />
-          <XAxis type="number" dataKey="strain" name="Strain" {...axis} domain={[0, "dataMax"]} label={{ value: "Strain del día", position: "insideBottom", offset: -2, fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+          <XAxis type="number" dataKey="strain" name="Strain" {...axis} domain={[0, (max: number) => Math.ceil(max)]} allowDecimals={false} tickFormatter={(v: number) => String(Math.round(v))} label={{ value: "Strain del día", position: "insideBottom", offset: -2, fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
           <YAxis type="number" dataKey="recovery" name="Recovery" domain={[0, 100]} {...axis} width={38} />
           <ZAxis range={[50, 50]} />
           <Tooltip content={<TipBox />} cursor={{ strokeDasharray: "3 3" }} />
