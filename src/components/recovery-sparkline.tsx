@@ -1,3 +1,5 @@
+import { trendArrow } from "@/lib/analytics";
+
 /** Mini-tendencia de recovery de los últimos 7 días (barras coloreadas por zona). */
 function barColor(score: number | null): string {
   if (score == null) return "bg-muted-foreground/25";
@@ -10,11 +12,21 @@ function dayLabel(date: string): string {
   return new Date(date + "T00:00:00").toLocaleDateString("es-AR", { weekday: "narrow" });
 }
 
+const TREND: Record<string, { label: string; className: string }> = {
+  up: { label: "↗ mejorando", className: "text-primary" },
+  down: { label: "↘ bajando", className: "text-red-400" },
+  flat: { label: "→ estable", className: "text-muted-foreground" },
+};
+
 export function RecoverySparkline({ data }: { data: { date: string; score: number | null }[] }) {
   if (data.length === 0) return null;
+  const t = TREND[trendArrow(data.map((d) => d.score), 3)];
   return (
     <div>
-      <div className="mb-2 text-xs font-medium text-muted-foreground">Recuperación · últimos 7 días</div>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs font-medium text-muted-foreground">Recuperación · últimos 7 días</span>
+        <span className={`text-xs font-medium ${t.className}`}>{t.label}</span>
+      </div>
       <div className="flex items-end gap-2">
         {data.map((d) => (
           <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
