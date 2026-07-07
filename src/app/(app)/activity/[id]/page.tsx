@@ -82,6 +82,24 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
     }
   }
 
+  // Consejos accionables de la salida (entrenador)
+  const tips: string[] = [];
+  const z = activity.hr_zones as Record<string, number> | null;
+  const zoneTotal = z ? [1, 2, 3, 4, 5].reduce((s, n) => s + (Number(z[`zone_${n}_ms`]) || 0), 0) : 0;
+  const zPct = (n: number) => (zoneTotal ? ((Number(z![`zone_${n}_ms`]) || 0) / zoneTotal) * 100 : 0);
+  if (activity.sport === "run") {
+    const cad = metrics.avg_cadence_spm;
+    if (cad != null && cad < 168) tips.push(`Cadencia ${Math.round(cad)} spm. Subí hacia 170–180 (pasos más cortos, no más rápidos): baja el impacto en la rodilla y mejora la economía.`);
+    if (zoneTotal && zPct(3) >= 45) tips.push(`${Math.round(zPct(3))}% del tiempo en Z3 (zona gris). En fondos buscá Z2; en calidad subí a Z4. Evitá quedarte en el medio.`);
+    else if (zoneTotal && zPct(1) + zPct(2) >= 75) tips.push(`${Math.round(zPct(1) + zPct(2))}% en Z1–Z2: buen trabajo aeróbico, así se construye base sin fatiga.`);
+  }
+  if (activity.sport === "bike") {
+    const cad = metrics.avg_cadence;
+    if (cad != null && cad < 80) tips.push(`Cadencia ${Math.round(cad)} rpm — baja. Subí a 85–95 rpm (piñón más liviano): descarga el cuádriceps, clave para tu rehab de rodilla.`);
+  }
+  if (activity.rpe != null && activity.strain != null && activity.rpe * 2.1 > activity.strain * 1.3)
+    tips.push("La sentiste más dura de lo que muestra el strain: puede ser fatiga acumulada o mal descanso. Ojo con la carga.");
+
   return (
     <>
       <Link href="/calendar" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -126,6 +144,23 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
               </span>
               <span className="text-muted-foreground"> entre {comparison.total} de distancia similar. {comparison.value} · {comparison.vsAvg} que tu promedio{comparison.rank !== 1 ? `, ${comparison.vsBest} que tu mejor` : ""}.</span>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Consejos de la salida */}
+      {tips.length > 0 && (
+        <Card className="mb-6 border-primary/30 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary">Consejos del entrenador</div>
+            <ul className="space-y-2">
+              {tips.map((t, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       )}
