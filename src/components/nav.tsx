@@ -13,6 +13,7 @@ import {
   Trophy,
   CalendarRange,
   Settings,
+  Flame,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,7 @@ const SECTIONS: { title: string | null; links: { href: string; label: string; ic
     links: [
       { href: "/trends", label: "Tendencias", icon: TrendingUp },
       { href: "/forma", label: "Forma", icon: Gauge },
+      { href: "/intensity", label: "Intensidad", icon: Flame },
       { href: "/records", label: "Marcas", icon: Trophy },
     ],
   },
