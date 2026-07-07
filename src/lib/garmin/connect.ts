@@ -67,11 +67,15 @@ export function mapGarminActivity(a: GAct) {
   const paceSecPerKm = dist && dur && dist > 0 ? dur / (dist / 1000) : null;
 
   // Métricas comunes ricas de Garmin (VO2max, training effect, carga).
+  const minT = num(a.minTemperature);
+  const maxT = num(a.maxTemperature);
+  const tempC = minT != null && maxT != null ? Math.round((minT + maxT) / 2) : (maxT ?? minT);
   const common: Record<string, number | null> = {
     vo2max: num(a.vO2MaxValue),
     aerobic_te: num(a.aerobicTrainingEffect),
     anaerobic_te: num(a.anaerobicTrainingEffect),
     garmin_load: num(a.activityTrainingLoad),
+    temp_c: tempC,
   };
   const metrics: Record<string, number | null> =
     sport === "bike"

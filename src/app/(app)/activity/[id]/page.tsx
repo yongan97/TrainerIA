@@ -99,6 +99,8 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
   }
   if (activity.rpe != null && activity.strain != null && activity.rpe * 2.1 > activity.strain * 1.3)
     tips.push("La sentiste más dura de lo que muestra el strain: puede ser fatiga acumulada o mal descanso. Ojo con la carga.");
+  if (metrics.temp_c != null && metrics.temp_c >= 25 && activity.avg_hr)
+    tips.push(`Hacía calor (${metrics.temp_c}°C): con calor la FC sube a igual esfuerzo, así que una FC alta acá es esperable.`);
 
   return (
     <>
@@ -113,7 +115,10 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
             {sportCfg?.label ?? activity.sport}
             {indoor && <span className="ml-2 text-sm font-normal text-muted-foreground">· indoor</span>}
           </h1>
-          <p className="text-sm text-muted-foreground">{fmtDate(activity.started_at)} · fuente {activity.source}</p>
+          <p className="text-sm text-muted-foreground">
+            {fmtDate(activity.started_at)} · fuente {activity.source}
+            {metrics.temp_c != null && ` · ${metrics.temp_c}°C`}
+          </p>
         </div>
       </header>
 
