@@ -191,6 +191,18 @@ export function getSyncStatus(): Promise<SyncStatus> {
   }, { whoopLast: null, garminLast: null });
 }
 
+export function getSleep(limit = 30): Promise<import("@/lib/domain/types").WhoopSleep[]> {
+  return safe(async () => {
+    const db = getAdminClient();
+    const { data } = await db
+      .from("whoop_sleep")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(limit);
+    return (data ?? []) as import("@/lib/domain/types").WhoopSleep[];
+  }, []);
+}
+
 export interface CycleRow {
   date: string;
   day_strain: number | null;

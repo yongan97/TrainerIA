@@ -9,6 +9,7 @@ import {
   HeartPulse,
   ClipboardList,
   Gauge,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ const LINKS = [
   { href: "/calendar", label: "Calendario", icon: CalendarDays },
   { href: "/trends", label: "Tendencias", icon: TrendingUp },
   { href: "/forma", label: "Forma", icon: Gauge },
+  { href: "/sleep", label: "Sueño", icon: Moon },
   { href: "/plan", label: "Plan", icon: ClipboardList },
   { href: "/rehab", label: "Rehab", icon: HeartPulse },
 ];
