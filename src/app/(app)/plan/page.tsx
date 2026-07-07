@@ -61,15 +61,17 @@ export default async function PlanPage() {
         </Card>
       </div>
 
+      <MesoMatrices planned={planned} />
+
       <section className="mt-8">
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-          Sesiones planificadas
+          Sesiones sueltas
         </h2>
-        {planned.length === 0 ? (
-          <EmptyState>Todavía no cargaste sesiones del plan.</EmptyState>
+        {planned.filter((p) => !(p.targets as { meso?: string })?.meso).length === 0 ? (
+          <EmptyState>Sin sesiones sueltas (todas pertenecen a un meso).</EmptyState>
         ) : (
           <div className="space-y-2">
-            {planned.map((p) => (
+            {planned.filter((p) => !(p.targets as { meso?: string })?.meso).map((p) => (
               <Card key={p.id}>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
                   <div className="flex items-center gap-3">
@@ -99,6 +101,66 @@ export default async function PlanPage() {
         )}
       </section>
     </Page>
+  );
+}
+
+function MesoMatrices({ planned }: { planned: import("@/lib/domain/types").PlannedSession[] }) {
+  type T = { meso?: string; semana?: number; codigo?: string; notas?: string };
+  const byMeso = new Map<string, typeof planned>();
+  for (const p of planned) {
+    const meso = (p.targets as T)?.meso;
+    if (!meso) continue;
+    (byMeso.get(meso) ?? byMeso.set(meso, []).get(meso)!).push(p);
+  }
+  if (byMeso.size === 0) return null;
+
+  return (
+    <section className="mt-8 space-y-6">
+      <h2 className="text-sm font-medium text-muted-foreground">Mesociclos</h2>
+      {[...byMeso.entries()].map(([meso, sessions]) => {
+        const semanas = [...new Set(sessions.map((s) => (s.targets as T)?.semana ?? 0))].sort((a, b) => a - b);
+        const codigos = [...new Set(sessions.map((s) => (s.targets as T)?.codigo ?? s.type ?? "—"))];
+        const cell = (sem: number, cod: string) =>
+          sessions.find((s) => ((s.targets as T)?.semana ?? 0) === sem && ((s.targets as T)?.codigo ?? s.type) === cod);
+        return (
+          <Card key={meso}>
+            <CardHeader>
+              <CardTitle className="text-foreground">{meso}</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-x-auto p-0">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="px-4 py-2 font-medium">Semana</th>
+                    {codigos.map((c) => <th key={c} className="px-4 py-2 font-medium">{c}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {semanas.map((sem) => (
+                    <tr key={sem} className="border-b border-border/50 last:border-0">
+                      <td className="px-4 py-2 font-medium">S{sem}</td>
+                      {codigos.map((c) => {
+                        const s = cell(sem, c);
+                        let disp = "—";
+                        if (s) {
+                          const tt = s.targets as T & { valor?: string; unidad?: string; distancia_km?: number; reps?: number; duracion_min?: number };
+                          if (tt.valor != null) disp = `${tt.valor} ${tt.unidad ?? ""}`.trim();
+                          else if (tt.distancia_km != null) disp = `${tt.distancia_km} km`;
+                          else if (tt.reps != null) disp = `${tt.reps}×`;
+                          else if (tt.duracion_min != null) disp = `${tt.duracion_min} min`;
+                          else disp = "✓";
+                        }
+                        return <td key={c} className="px-4 py-2 text-muted-foreground">{disp}</td>;
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </section>
   );
 }
 
