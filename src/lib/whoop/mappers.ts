@@ -78,6 +78,7 @@ export function mapWorkout(r: Obj) {
   return {
     external_id: String(r.id ?? ""),
     sport, // puede ser null si no lo mapeamos aún
+    sport_name: typeof r.sport_name === "string" ? r.sport_name : null,
     started_at: typeof r.start === "string" ? r.start : null,
     duration_s:
       typeof r.start === "string" && typeof r.end === "string"

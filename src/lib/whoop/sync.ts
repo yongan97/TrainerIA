@@ -41,7 +41,9 @@ export async function syncWhoop(sinceISO?: string): Promise<SyncResult> {
     .map(mapWorkout)
     .filter((w) => w.started_at && w.external_id)
     .map((w) => ({
-      sport: w.sport ?? "unknown",
+      // Deporte canónico (bike/run) si lo mapeamos; si no, el nombre real de
+      // Whoop (spin, swimming, hiking…) en vez de un genérico "unknown".
+      sport: w.sport ?? w.sport_name ?? "unknown",
       source: "whoop" as const,
       started_at: w.started_at,
       duration_s: w.duration_s,
