@@ -32,13 +32,13 @@ export function WeeklyLoad({ data }: { data: WeeklyLoadPoint[] }) {
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 12, left: -22, bottom: 0 }}>
+        <BarChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
           <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
           <XAxis dataKey="label" {...axis} />
-          <YAxis {...axis} width={34} />
+          <YAxis {...axis} width={40} allowDecimals={false} />
           <Tooltip content={<Tip />} cursor={{ fill: "hsl(var(--accent))", opacity: 0.3 }} />
-          <Bar dataKey="bike" name="Ciclismo" stackId="v" fill="#2b93d1" />
-          <Bar dataKey="run" name="Running" stackId="v" fill="#d1691f" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="bike" name="Ciclismo" stackId="v" fill="#2b93d1" isAnimationActive={false} />
+          <Bar dataKey="run" name="Running" stackId="v" fill="#d1691f" radius={[4, 4, 0, 0]} isAnimationActive={false} />
         </BarChart>
       </ResponsiveContainer>
     </div>
