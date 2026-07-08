@@ -95,7 +95,7 @@ export default async function CalendarPage() {
 
       <h2 className="mb-3 text-sm font-medium text-muted-foreground">Detalle · últimos 14 días</h2>
       <div className="space-y-3">
-        {daily.slice(0, 14).map((day) => {
+        {daily.filter((day) => day.date <= today).slice(0, 14).map((day) => {
           const acts = actByDay.get(day.date) ?? [];
           const plans = planByDay.get(day.date) ?? [];
           return (
