@@ -18,9 +18,10 @@ async function syncGarminBestEffort() {
   }
 }
 
-/** Corre todo el pipeline: Whoop + Garmin + reconciliación. */
-export async function runAllSync() {
-  const [whoop, garmin] = await Promise.all([syncWhoop(), syncGarminBestEffort()]);
+/** Corre todo el pipeline: Whoop + Garmin + reconciliación.
+ *  sinceISO opcional para backfill de historia más profunda de Whoop. */
+export async function runAllSync(sinceISO?: string) {
+  const [whoop, garmin] = await Promise.all([syncWhoop(sinceISO), syncGarminBestEffort()]);
   const reconciled = await reconcileActivities();
   return { whoop, garmin, reconciled };
 }
