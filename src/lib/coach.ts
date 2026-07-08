@@ -72,7 +72,17 @@ export function dailyBrief(c: CoachContext): CoachBrief {
     return mk("recap", "Sesión hecha. Ahora la mejora se juega en la recuperación: hidratación, proteína y sueño.");
   }
 
-  // 6) Verde para calidad.
+  // 6) Zona amarilla de recovery: modular aunque no haya sesión de calidad.
+  if (c.recovery != null && c.recovery < 50) {
+    return mk(
+      "modulate",
+      c.plannedType
+        ? `Recovery en amarillo (${Math.round(c.recovery)}%): hacé ${c.plannedType} en fácil/moderado, sin buscar intensidad.`
+        : `Recovery en amarillo (${Math.round(c.recovery)}%): mejor un día fácil o descanso activo.`,
+    );
+  }
+
+  // 7) Verde para calidad.
   if (c.recovery != null && c.recovery >= 67) {
     return mk("go", c.plannedType ? `Estás fresco: dale con ganas a ${c.plannedType}.` : "Estás fresco: buen día para meter calidad.");
   }
