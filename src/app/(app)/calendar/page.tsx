@@ -40,8 +40,10 @@ export default async function CalendarPage() {
   const isDone = (p: PlannedSession) =>
     (actByDay.get(p.date) ?? []).some((a) => a.sport === p.sport);
 
-  // Adherencia sobre sesiones pasadas
-  const pastPlanned = planned.filter((p) => p.date <= today);
+  // Adherencia sobre sesiones pasadas recientes (últimos 35 días): mesos
+  // históricos con fechas estimadas no distorsionan la métrica actual.
+  const since35 = new Date(Date.now() - 35 * 86_400_000).toISOString().slice(0, 10);
+  const pastPlanned = planned.filter((p) => p.date <= today && p.date >= since35);
   const doneCount = pastPlanned.filter(isDone).length;
   const adherence = pastPlanned.length ? Math.round((doneCount / pastPlanned.length) * 100) : null;
 
