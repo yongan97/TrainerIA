@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Activity } from "lucide-react";
 import { Nav, NavMobile } from "@/components/nav";
 import { SyncStatusPanel, SyncStatusInline } from "@/components/sync-status";
+import { AutoSync } from "@/components/auto-sync";
 import { isWhoopConnected, getSyncStatus } from "@/lib/data";
 
 export default async function AppLayout({
@@ -13,8 +14,12 @@ export default async function AppLayout({
     isWhoopConnected(),
     getSyncStatus(),
   ]);
+  const today = new Date().toISOString().slice(0, 10);
+  // Datos "viejos" si no hay recovery de hoy todavía (Whoop lo calcula al despertar).
+  const stale = connected && status.whoopLast !== today;
   return (
     <div className="flex min-h-screen">
+      {stale && <AutoSync stale={stale} />}
       {/* Sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card/40 p-4 md:flex">
         <Link href="/overview" className="mb-6 flex items-center gap-2 px-2">
