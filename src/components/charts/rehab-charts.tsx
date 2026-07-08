@@ -57,10 +57,10 @@ export function RehabCharts({ daily, weekly }: { daily: RehabPoint[]; weekly: We
         <CardContent>
           <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={daily} margin={{ top: 8, right: 12, left: -22, bottom: 0 }}>
+              <ComposedChart data={daily} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
                 <XAxis dataKey="label" {...axis} minTickGap={24} />
-                <YAxis domain={[0, 10]} {...axis} width={30} />
+                <YAxis domain={[0, 10]} {...axis} width={28} />
                 <Tooltip content={<Tip />} />
                 <ReferenceLine y={4} stroke={PAIN} strokeOpacity={0.5} strokeDasharray="4 3" />
                 <Bar dataKey="runKm" name="Running (km)" fill={RUN} fillOpacity={0.5} radius={[3, 3, 0, 0]} />
@@ -79,10 +79,10 @@ export function RehabCharts({ daily, weekly }: { daily: RehabPoint[]; weekly: We
         <CardContent>
           <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weekly} margin={{ top: 8, right: 12, left: -22, bottom: 0 }}>
+              <BarChart data={weekly} margin={{ top: 8, right: 12, left: -8, bottom: 0 }}>
                 <CartesianGrid stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
                 <XAxis dataKey="label" {...axis} />
-                <YAxis {...axis} width={30} />
+                <YAxis {...axis} width={34} />
                 <Tooltip content={<Tip unit=" km" />} cursor={{ fill: "hsl(var(--accent))", opacity: 0.3 }} />
                 <Bar dataKey="km" name="km" radius={[4, 4, 0, 0]}>
                   {weekly.map((w, i) => (

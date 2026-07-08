@@ -90,7 +90,7 @@ function Section({ sport, title, recs }: { sport: string; title: string; recs: R
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <SportBadge sport={sport} />
+        <SportBadge sport={sport} showLabel={false} />
         <h2 className="text-sm font-medium text-muted-foreground">{title}</h2>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
