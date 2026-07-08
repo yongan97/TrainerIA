@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
       Number.isFinite(days) && days > 0
         ? new Date(Date.now() - days * 86_400_000).toISOString()
         : undefined;
-    const result = await runAllSync(sinceISO);
+    // En un backfill grande traemos más actividades de Garmin también.
+    const garminLimit = sinceISO && days >= 90 ? 150 : 30;
+    const result = await runAllSync(sinceISO, garminLimit);
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : "error" }, { status: 500 });
