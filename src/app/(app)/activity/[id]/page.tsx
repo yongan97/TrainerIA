@@ -89,13 +89,13 @@ export default async function ActivityDetailPage({ params }: { params: Promise<{
   const zPct = (n: number) => (zoneTotal ? ((Number(z![`zone_${n}_ms`]) || 0) / zoneTotal) * 100 : 0);
   if (activity.sport === "run") {
     const cad = metrics.avg_cadence_spm;
-    if (cad != null && cad < 168) tips.push(`Cadencia ${Math.round(cad)} spm. Subí hacia 170–180 (pasos más cortos, no más rápidos): baja el impacto en la rodilla y mejora la economía.`);
+    if (cad != null && cad < 168) tips.push(`Cadencia ${Math.round(cad)} spm. Subí hacia 170–180 (pasos más cortos, no más rápidos): mejora la economía y baja el impacto por zancada.`);
     if (zoneTotal && zPct(3) >= 45) tips.push(`${Math.round(zPct(3))}% del tiempo en Z3 (zona gris). En fondos buscá Z2; en calidad subí a Z4. Evitá quedarte en el medio.`);
     else if (zoneTotal && zPct(1) + zPct(2) >= 75) tips.push(`${Math.round(zPct(1) + zPct(2))}% en Z1–Z2: buen trabajo aeróbico, así se construye base sin fatiga.`);
   }
   if (activity.sport === "bike") {
     const cad = metrics.avg_cadence;
-    if (cad != null && cad < 80) tips.push(`Cadencia ${Math.round(cad)} rpm — baja. Subí a 85–95 rpm (piñón más liviano): descarga el cuádriceps, clave para tu rehab de rodilla.`);
+    if (cad != null && cad < 85) tips.push(`Cadencia ${Math.round(cad)} rpm — baja. Subí a 85–95 rpm (piñón más liviano): menos fuerza por pedalada = menos sobrecarga del cuádriceps. Es la clave de tu rehab.`);
   }
   if (activity.rpe != null && activity.strain != null && activity.rpe * 2.1 > activity.strain * 1.3)
     tips.push("La sentiste más dura de lo que muestra el strain: puede ser fatiga acumulada o mal descanso. Ojo con la carga.");

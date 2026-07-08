@@ -28,14 +28,14 @@ export default async function RehabPage() {
   const today = new Date().toISOString().slice(0, 10);
   const [logs, activities] = await Promise.all([getRehabLogs(120), getActivities(500)]);
 
+  // La sobrecarga de cuádriceps viene de la bici (técnica/cadencia), así que el
+  // eje del rehab es la carga de bici, no el impacto del running.
   const painByDay = new Map(logs.map((l) => [l.date, l.knee_pain]));
-  const runKmByDay = new Map<string, number>();
-  const runMin = new Map<string, number>();
+  const bikeMinByDay = new Map<string, number>();
   for (const a of activities) {
-    if (a.sport !== "run") continue;
+    if (a.sport !== "bike") continue;
     const d = a.started_at.slice(0, 10);
-    runKmByDay.set(d, (runKmByDay.get(d) ?? 0) + (a.distance_m ?? 0) / 1000);
-    runMin.set(d, (runMin.get(d) ?? 0) + (a.duration_s ?? 0) / 60);
+    bikeMinByDay.set(d, (bikeMinByDay.get(d) ?? 0) + (a.duration_s ?? 0) / 60);
   }
 
   // Serie diaria (56 días)
@@ -48,13 +48,13 @@ export default async function RehabPage() {
     daily.push({
       label: d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }),
       pain: painByDay.get(key) ?? null,
-      runKm: Math.round((runKmByDay.get(key) ?? 0) * 10) / 10,
+      bikeMin: Math.round(bikeMinByDay.get(key) ?? 0),
     });
   }
 
-  // Volumen semanal (8 semanas) + regla del 10%
-  const kmByWeek = new Map<string, number>();
-  for (const [d, km] of runKmByDay) kmByWeek.set(mondayOf(d), (kmByWeek.get(mondayOf(d)) ?? 0) + km);
+  // Volumen semanal de bici (8 semanas) + progresión gradual
+  const minByWeek = new Map<string, number>();
+  for (const [d, m] of bikeMinByDay) minByWeek.set(mondayOf(d), (minByWeek.get(mondayOf(d)) ?? 0) + m);
   const weekStarts: string[] = [];
   const mon = new Date(mondayOf(today));
   for (let i = 7; i >= 0; i--) {
@@ -63,21 +63,21 @@ export default async function RehabPage() {
     weekStarts.push(w.toISOString().slice(0, 10));
   }
   const weekly: WeekPoint[] = weekStarts.map((ws, i) => {
-    const km = Math.round((kmByWeek.get(ws) ?? 0) * 10) / 10;
-    const prev = i > 0 ? kmByWeek.get(weekStarts[i - 1]) ?? 0 : 0;
+    const min = Math.round(minByWeek.get(ws) ?? 0);
+    const prev = i > 0 ? minByWeek.get(weekStarts[i - 1]) ?? 0 : 0;
     return {
       label: new Date(ws + "T00:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }),
-      km,
-      over10: prev > 0 && km > prev * 1.1,
+      min,
+      over10: prev > 0 && min > prev * 1.1,
     };
   });
 
-  // Correlación dolor con/sin running
-  const withRun: number[] = [];
-  const withoutRun: number[] = [];
+  // Molestia en días con/sin bici
+  const withBike: number[] = [];
+  const withoutBike: number[] = [];
   for (const l of logs) {
     if (l.knee_pain == null) continue;
-    ((runKmByDay.get(l.date) ?? 0) > 0 ? withRun : withoutRun).push(l.knee_pain);
+    ((bikeMinByDay.get(l.date) ?? 0) > 0 ? withBike : withoutBike).push(l.knee_pain);
   }
   const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
 
@@ -93,19 +93,19 @@ export default async function RehabPage() {
     else break;
   }
 
-  const thisWeekKm = weekly[weekly.length - 1]?.km ?? 0;
-  const lastWeekKm = weekly[weekly.length - 2]?.km ?? 0;
-  const bumped = lastWeekKm > 0 && thisWeekKm > lastWeekKm * 1.1;
+  const thisWeek = weekly[weekly.length - 1]?.min ?? 0;
+  const lastWeek = weekly[weekly.length - 2]?.min ?? 0;
+  const bumped = lastWeek > 0 && thisWeek > lastWeek * 1.1;
 
-  // Tendencia de cadencia de running (subir cadencia = menos impacto en la rodilla)
+  // Cadencia de bici: cadencia baja = mucha fuerza por pedalada = sobrecarga del cuádriceps
   const cadencePts = activities
-    .filter((a) => a.sport === "run")
-    .filter((a) => typeof (a.metrics as Record<string, number | null> | null)?.avg_cadence_spm === "number")
+    .filter((a) => a.sport === "bike")
+    .filter((a) => typeof (a.metrics as Record<string, number | null> | null)?.avg_cadence === "number")
     .sort((x, y) => x.started_at.localeCompare(y.started_at))
     .slice(-20)
     .map((a) => ({
       label: new Date(a.started_at).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }),
-      cadence: Math.round((a.metrics as Record<string, number>).avg_cadence_spm),
+      cadence: Math.round((a.metrics as Record<string, number>).avg_cadence),
     }));
   const avgCad = cadencePts.length ? Math.round(cadencePts.reduce((s, p) => s + p.cadence, 0) / cadencePts.length) : null;
 
@@ -116,11 +116,11 @@ export default async function RehabPage() {
         <CardContent className="py-4 text-sm">
           {bumped ? (
             <span className="text-yellow-300">
-              ⚠️ Subiste el running de {lastWeekKm} a {thisWeekKm} km esta semana (+{Math.round((thisWeekKm / lastWeekKm - 1) * 100)}%). Con rodilla en rehab, la regla del 10% sugiere ir más gradual.
+              ⚠️ Subiste la bici de {lastWeek} a {thisWeek} min esta semana (+{Math.round((thisWeek / lastWeek - 1) * 100)}%). Con el cuádriceps sensible, progresá el volumen de a poco y cuidá la cadencia.
             </span>
           ) : (
             <span className="text-muted-foreground">
-              Objetivo del rehab: mantener el dolor <b className="text-foreground">por debajo de 4/10</b> y que no empeore semana a semana. La fuerza de glúteo/cadera es la base — sostené la racha de drills.
+              Objetivo del rehab: mantener la molestia <b className="text-foreground">por debajo de 4/10</b>. La causa es técnica de pedaleo — <b className="text-foreground">cadencia alta (≥85–90 rpm)</b> para bajar la fuerza por pedalada, más fuerza de glúteo/cadera para no sobrecargar el cuádriceps.
             </span>
           )}
         </CardContent>
@@ -129,19 +129,19 @@ export default async function RehabPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <RehabCharts daily={daily} weekly={weekly} />
         <div className="space-y-4">
-          <Stat label="Dolor con running" value={fmt(avg(withRun), 1)} suffix="/10" hint={`${withRun.length} días con impacto`} />
-          <Stat label="Dolor sin running" value={fmt(avg(withoutRun), 1)} suffix="/10" hint={`${withoutRun.length} días sin impacto`} />
+          <Stat label="Molestia con bici" value={fmt(avg(withBike), 1)} suffix="/10" hint={`${withBike.length} días con bici`} />
+          <Stat label="Molestia sin bici" value={fmt(avg(withoutBike), 1)} suffix="/10" hint={`${withoutBike.length} días sin bici`} />
           <Stat label="Racha de drills" value={String(streak)} suffix={streak === 1 ? "día" : "días"} hint="Glúteo/cadera consecutivos" />
         </div>
       </div>
 
-      {/* Cadencia de running (más cadencia = menos impacto) */}
+      {/* Cadencia de bici (más cadencia = menos fuerza por pedalada = menos cuádriceps) */}
       {cadencePts.length >= 4 && (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="text-foreground">Cadencia de running</CardTitle>
+            <CardTitle className="text-foreground">Cadencia de bici</CardTitle>
             <p className="text-xs text-muted-foreground">
-              Zona verde 170–185 spm. {avgCad != null && (avgCad < 170 ? `Venís en ${avgCad} spm — subir la cadencia (pasos más cortos) descarga la rodilla.` : `Venís en ${avgCad} spm — buena cadencia para cuidar el impacto.`)}
+              Objetivo ≥85–90 rpm. {avgCad != null && (avgCad < 85 ? `Venís en ${avgCad} rpm — subir la cadencia (piñón más liviano) descarga el cuádriceps. Es la clave de tu rehab.` : `Venís en ${avgCad} rpm — buena cadencia para proteger el cuádriceps.`)}
             </p>
           </CardHeader>
           <CardContent>
@@ -172,8 +172,8 @@ export default async function RehabPage() {
                 <thead>
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="px-5 py-3 font-medium">Fecha</th>
-                    <th className="px-5 py-3 font-medium">Dolor</th>
-                    <th className="px-5 py-3 font-medium">Run (min)</th>
+                    <th className="px-5 py-3 font-medium">Molestia</th>
+                    <th className="px-5 py-3 font-medium">Bici (min)</th>
                     <th className="px-5 py-3 font-medium">Notas</th>
                   </tr>
                 </thead>
@@ -182,7 +182,7 @@ export default async function RehabPage() {
                     <tr key={l.id} className="border-b border-border/50 last:border-0">
                       <td className="px-5 py-3">{fmtDate(l.date)}</td>
                       <td className="px-5 py-3 font-medium">{l.knee_pain ?? "—"}/10</td>
-                      <td className="px-5 py-3 text-muted-foreground">{Math.round(runMin.get(l.date) ?? 0) || "—"}</td>
+                      <td className="px-5 py-3 text-muted-foreground">{Math.round(bikeMinByDay.get(l.date) ?? 0) || "—"}</td>
                       <td className="px-5 py-3 text-muted-foreground">{l.notes ?? "—"}</td>
                     </tr>
                   ))}
@@ -201,7 +201,7 @@ function Page({ children }: { children: React.ReactNode }) {
     <>
       <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Rehab</h1>
-        <p className="text-sm text-muted-foreground">Rodilla, drills de glúteo/cadera y su relación con el impacto del running.</p>
+        <p className="text-sm text-muted-foreground">Cuádriceps derecho, técnica de pedaleo (cadencia) y fuerza de glúteo/cadera.</p>
       </header>
       {children}
     </>

@@ -88,7 +88,7 @@ export default async function WeekPage() {
   if (cur.avgRec != null) parts.push(`Recovery promedio ${cur.avgRec}%${prev.avgRec != null ? (cur.avgRec >= prev.avgRec ? ", mejor que la semana previa" : ", algo por debajo de la previa") : ""}.`);
   if (cur.avgSleepH != null) parts.push(`Dormiste ${cur.avgSleepH.toFixed(1)} h de media${cur.avgSleepH < 7.5 ? " — hay margen para descansar más" : ""}.`);
   if (cur.adherence != null) parts.push(`Cumpliste el ${cur.adherence}% del plan.`);
-  if (volDelta != null && volDelta > 15) parts.push("Ojo con el salto de carga: subí de a poco para cuidar la rodilla.");
+  if (volDelta != null && volDelta > 15) parts.push("Ojo con el salto de carga: subí de a poco para cuidar el cuádriceps.");
   else if (cur.totalMin > 0 && cur.avgRec != null && cur.avgRec >= 60) parts.push("Buen equilibrio carga/recuperación: seguí así.");
   const narrative = parts.join(" ");
 
@@ -109,7 +109,7 @@ export default async function WeekPage() {
     const good = (cur.avgRec ?? 0) >= 55;
     const target = Math.round(thisWeekRunKm * (good ? 1.1 : 1.0));
     nextWeekRec = good
-      ? `Venís bien (recovery medio ${cur.avgRec}%): la próxima semana podés subir el running a ~${target} km, sin pasarte del +10% para cuidar la rodilla.`
+      ? `Venís bien (recovery medio ${cur.avgRec}%): la próxima semana podés subir el running a ~${target} km, sin pasarte del +10% para cuidar el cuádriceps.`
       : `Recovery medio ${cur.avgRec ?? "—"}%: mantené ~${thisWeekRunKm} km de running la próxima semana antes de volver a subir.`;
   }
 

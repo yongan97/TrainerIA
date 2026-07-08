@@ -73,7 +73,7 @@ const WHOOP_SPORT_ID_MAP: Record<number, SportId> = {
   97: "bike", // Spin / indoor cycling (verificado con datos reales)
   // Walking (63), swimming (33), hiking (52), meditación (243) y genérico (-1)
   // NO se mapean a bike/run: se guardan con su nombre real de Whoop para no
-  // ensuciar la señal de impacto de running (relevante para el rehab de rodilla).
+  // ensuciar la señal de impacto de running (relevante para el rehab de cuádriceps).
 };
 
 export function mapWhoopSport(sportId: number | null | undefined): SportId | null {

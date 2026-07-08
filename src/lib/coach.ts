@@ -43,13 +43,17 @@ export function dailyBrief(c: CoachContext): CoachBrief {
   if (c.tsb != null) reasons.push(`Forma ${c.tsb.toFixed(1)}`);
   if (c.acwr != null) reasons.push(`ACWR ${c.acwr.toFixed(2)}`);
   if (c.sleepHours != null) reasons.push(`Dormiste ${c.sleepHours.toFixed(1)}h`);
-  if (c.kneePain != null) reasons.push(`Rodilla ${c.kneePain}/10`);
+  if (c.kneePain != null) reasons.push(`Cuádriceps ${c.kneePain}/10`);
 
   const mk = (level: CoachLevel, action: string): CoachBrief => ({ level, headline: LABELS[level], reasons, action });
 
-  // 1) Rodilla: si duele y hoy hay running planificado -> proteger del impacto.
-  if ((c.kneePain ?? 0) >= 5 && c.plannedType && /run|series|t1|t2|t3|fondo|progresiv/i.test(c.plannedType)) {
-    return mk("caution", "Rodilla sensible y toca correr: reemplazá el impacto por bici suave + drills de glúteo/cadera hoy.");
+  // 1) Cuádriceps: la sobrecarga viene de la bici (técnica/cadencia baja).
+  //    Si molesta y hoy hay bici, cuidá la cadencia o cambiá por fuerza/movilidad.
+  if ((c.kneePain ?? 0) >= 5 && c.plannedType && /bici|bike|rodillo|simulador/i.test(c.plannedType)) {
+    return mk("caution", "Cuádriceps sensible y toca bici: pedaleá suave y con cadencia alta (≥90 rpm), o cambiala por fuerza de glúteo/cadera + movilidad. Evitá fuerza en piñón pesado.");
+  }
+  if ((c.kneePain ?? 0) >= 6) {
+    return mk("caution", "Cuádriceps con molestia marcada: día suave/fuerza, y ojo con la técnica de pedaleo cuando vuelvas a la bici.");
   }
 
   // 2) Sobrecarga fisiológica -> descanso.

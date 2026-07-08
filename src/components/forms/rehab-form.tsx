@@ -59,7 +59,7 @@ export function RehabForm({ today }: { today: string }) {
 
       <div className="text-sm">
         <div className="mb-1 flex items-center justify-between">
-          <span className="text-muted-foreground">Dolor de rodilla</span>
+          <span className="text-muted-foreground">Molestia de cuádriceps (der.)</span>
           <span className="font-medium tabular-nums">{pain}/10</span>
         </div>
         <input

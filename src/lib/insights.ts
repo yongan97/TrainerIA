@@ -68,10 +68,10 @@ export function computeInsights(d: InsightData): Insight[] {
     out.push({ level: "warn", title: "Carga subiendo rápido", detail: `ACWR ${d.acwr.toFixed(2)}. Vas bien pero cuidá la progresión.` });
   }
 
-  // Dolor de rodilla
+  // Molestia de cuádriceps
   const maxPain = d.kneePainRecent.length ? Math.max(...d.kneePainRecent) : 0;
   if (maxPain >= 4) {
-    out.push({ level: "warn", title: "Dolor de rodilla por encima del umbral", detail: `Registraste dolor de ${maxPain}/10. Sobre 4/10, modulá el impacto y reforzá glúteo/cadera.` });
+    out.push({ level: "warn", title: "Molestia de cuádriceps por encima del umbral", detail: `Registraste dolor de ${maxPain}/10. Sobre 4/10, modulá el impacto y reforzá glúteo/cadera.` });
   }
 
   // Adherencia
