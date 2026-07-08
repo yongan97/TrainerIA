@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         ? new Date(Date.now() - days * 86_400_000).toISOString()
         : undefined;
     // En un backfill grande traemos más actividades de Garmin también.
-    const garminLimit = sinceISO && days >= 90 ? 150 : 30;
+    const garminLimit = sinceISO && days >= 90 ? 400 : 30;
     const result = await runAllSync(sinceISO, garminLimit);
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
