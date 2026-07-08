@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SetupNotice } from "@/components/ui/setup-notice";
 import { SettingsForm } from "@/components/forms/settings-form";
+import { ZonesReference } from "@/components/zones-reference";
 import { isConfigured, getSettings } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +28,10 @@ export default async function SettingsPage() {
       <p className="mt-4 text-xs text-muted-foreground">
         El FTP habilita métricas por potencia (IF, TSS) en la bici. La FC umbral y máxima afinan las zonas. La carrera objetivo muestra la cuenta regresiva en el inicio.
       </p>
+
+      <div className="mt-6">
+        <ZonesReference settings={settings} />
+      </div>
 
       <Card className="mt-6">
         <CardHeader>
