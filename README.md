@@ -24,6 +24,7 @@ próximo entreno del plan, strain y qué entrenaste, cuenta regresiva a la carre
 - **Calendario** — planificado vs ejecutado vs tolerado por día + adherencia al plan.
 - **Semana** — resumen narrado, deltas vs semana previa, volumen 8 semanas, mapa de consistencia.
 - **Plan** — generador de mesociclo (progresión por semana), sesiones sueltas, import Garmin `.tcx`.
+- **Carrera** — carrera objetivo, cuenta regresiva y tapering.
 
 **Análisis**
 - **Tendencias** — ACWR (carga aguda:crónica), HRV vs línea base, recovery, volumen, tolerancia.
@@ -34,6 +35,7 @@ próximo entreno del plan, strain y qué entrenaste, cuenta regresiva a la carre
 - **Marcas** — records por deporte.
 
 **Salud**
+- **Alertas** — avisos automáticos (recovery bajo, pico de carga, dolor alto, etc.).
 - **Sueño** — fases, duración, eficiencia, deuda de sueño.
 - **Rehab** — dolor de rodilla vs impacto de running, regla del 10%, racha de drills.
 
@@ -48,6 +50,8 @@ zonas de FC, splits por vuelta (Garmin), efecto de entrenamiento, sensaciones (R
 - Garmin vía librería no oficial detrás de flag (`GARMIN_ENABLED`) + import `.tcx`
 - Reconcile: Garmin manda como fuente del ejecutado, se le pega el strain de Whoop
 - Cron diario en Vercel (Whoop + Garmin + reconcile), idempotente
+- **Auto-sync al abrir la app** si faltan datos de hoy (backfill vía `/api/sync?days=N`)
+- **PWA instalable** (manifest + ícono) para usarla como app en el celular
 - `computePmc`, `acwr`, `rollingAvg`, `trainingStatus`, motor de coaching en `src/lib`
 
 ## Setup
