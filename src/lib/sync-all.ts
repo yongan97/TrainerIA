@@ -18,12 +18,23 @@ async function syncGarminBestEffort(limit = 30) {
   }
 }
 
+/** Sync de Whoop best-effort: si el refresh token rota/expira (400), no debe
+ *  tumbar el pipeline entero. Garmin es la fuente de verdad de lo EJECUTADO,
+ *  así que siempre tiene que poder entrar aunque Whoop falle. */
+async function syncWhoopBestEffort(sinceISO?: string) {
+  try {
+    return await syncWhoop(sinceISO);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
 /** Corre todo el pipeline: Whoop + Garmin + reconciliación.
  *  sinceISO opcional para backfill de historia más profunda de Whoop;
  *  garminLimit para traer más actividades en un backfill. */
 export async function runAllSync(sinceISO?: string, garminLimit = 30) {
   const [whoop, garmin] = await Promise.all([
-    syncWhoop(sinceISO),
+    syncWhoopBestEffort(sinceISO),
     syncGarminBestEffort(garminLimit),
   ]);
   const reconciled = await reconcileActivities();
