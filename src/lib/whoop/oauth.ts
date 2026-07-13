@@ -80,6 +80,15 @@ async function refresh(refreshToken: string): Promise<StoredTokens> {
 }
 
 /**
+ * Refresh single-flight: si varias llamadas concurrentes (p.ej. los 4 endpoints
+ * que dispara syncWhoop en paralelo) ven el token vencido a la vez, un solo
+ * refresh ocurre y el resto espera esa misma promesa. Sin esto, las N llamadas
+ * mandan el MISMO refresh token single-use; Whoop rota el primero e invalida el
+ * resto, detecta "reuso" y revoca toda la familia → 400 permanente.
+ */
+let inFlightRefresh: Promise<StoredTokens> | null = null;
+
+/**
  * Devuelve un access token válido, refrescando si está vencido.
  * Lanza si no hay tokens guardados (hay que conectar Whoop primero).
  */
@@ -94,6 +103,13 @@ export async function getValidAccessToken(): Promise<string> {
   if (!current.refreshToken) {
     throw new Error("Token vencido y sin refresh_token. Reconectá Whoop.");
   }
-  const refreshed = await refresh(current.refreshToken);
+  // Dedupe: solo el primero arranca el refresh; el resto aguarda esa promesa.
+  if (!inFlightRefresh) {
+    const rt = current.refreshToken;
+    inFlightRefresh = refresh(rt).finally(() => {
+      inFlightRefresh = null;
+    });
+  }
+  const refreshed = await inFlightRefresh;
   return refreshed.accessToken;
 }
