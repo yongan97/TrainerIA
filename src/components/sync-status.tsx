@@ -1,6 +1,7 @@
 import { Activity, Watch } from "lucide-react";
 import type { SyncStatus } from "@/lib/data";
 import { fmtRelativeDay, daysAgo } from "@/lib/format";
+import { SyncButton } from "@/components/sync-button";
 
 function dotColor(date: string | null): string {
   const d = daysAgo(date);
@@ -35,7 +36,10 @@ export function SyncStatusPanel({ status }: { status: SyncStatus }) {
     <div className="space-y-2 rounded-lg border border-border bg-card/50 p-3">
       <Row icon={Watch} label="Whoop" date={status.whoopLast} />
       <Row icon={Activity} label="Garmin" date={status.garminLast} />
-      <p className="pt-1 text-[10px] text-muted-foreground/70">
+      <div className="pt-1">
+        <SyncButton variant="full" />
+      </div>
+      <p className="pt-0.5 text-[10px] text-muted-foreground/70">
         Sincronización automática diaria
       </p>
     </div>
@@ -54,6 +58,7 @@ export function SyncStatusInline({ status }: { status: SyncStatus }) {
         <span className={`h-2 w-2 rounded-full ${dotColor(status.garminLast)}`} />
         Garmin
       </span>
+      <SyncButton variant="icon" />
     </div>
   );
 }
