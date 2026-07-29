@@ -359,3 +359,80 @@ export function getRehabLogs(limit = 60): Promise<RehabLog[]> {
     return (data ?? []) as RehabLog[];
   }, []);
 }
+
+import type { NutritionContext } from "@/lib/nutrition";
+import { mapWhoopSport, mapGarminSport } from "@/lib/sports/registry";
+
+/** Contexto para la vista de Nutrición: qué entrenaste hoy y cómo venís. */
+export function getNutritionContext(today: string): Promise<NutritionContext> {
+  const tomorrow = new Date(new Date(today + "T00:00:00").getTime() + 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const dayAfter = new Date(new Date(today + "T00:00:00").getTime() + 2 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  const empty: NutritionContext = {
+    alreadyTrained: false,
+    todayStrain: null,
+    todaySport: null,
+    todayMinutes: null,
+    recovery: null,
+    plannedHardAhead: false,
+  };
+  return safe<NutritionContext>(async () => {
+    const db = getAdminClient();
+    const [actR, recR, cycR, plnR] = await Promise.all([
+      db
+        .from("activities")
+        .select("sport, duration_s, strain, started_at")
+        .gte("started_at", today)
+        .lt("started_at", tomorrow)
+        .order("duration_s", { ascending: false }),
+      db
+        .from("whoop_recovery")
+        .select("recovery_score")
+        .order("date", { ascending: false })
+        .limit(1),
+      db.from("whoop_cycles").select("day_strain").eq("date", today).limit(1),
+      db
+        .from("planned_sessions")
+        .select("type, targets, date")
+        .gte("date", today)
+        .lt("date", dayAfter),
+    ]);
+
+    const acts = (actR.data ?? []) as Array<{
+      sport: string;
+      duration_s: number | null;
+      strain: number | null;
+    }>;
+    const alreadyTrained = acts.length > 0;
+    const main = acts[0] ?? null; // la de mayor duración
+    // Strain del día: el del ciclo de Whoop si está, si no el máximo de las actividades.
+    const cycleStrain = (cycR.data?.[0]?.day_strain as number | null) ?? null;
+    const actStrain = acts.reduce<number | null>(
+      (mx, a) => (a.strain != null ? Math.max(mx ?? 0, a.strain) : mx),
+      null,
+    );
+
+    const plans = (plnR.data ?? []) as Array<{ type: string | null; targets: unknown }>;
+    const plannedHardAhead = plans.some((p) => {
+      const codigo = (p.targets as { codigo?: string })?.codigo;
+      return codigo === "T1" || /t1|series|pasada|calidad|interval|tempo|umbral/i.test(p.type ?? "");
+    });
+
+    const rawSport = main?.sport ?? null;
+    const sport = rawSport
+      ? mapGarminSport(rawSport) ?? mapWhoopSport(Number(rawSport)) ?? rawSport
+      : null;
+
+    return {
+      alreadyTrained,
+      todayStrain: cycleStrain ?? actStrain,
+      todaySport: sport,
+      todayMinutes: main?.duration_s != null ? Math.round(main.duration_s / 60) : null,
+      recovery: (recR.data?.[0]?.recovery_score as number | null) ?? null,
+      plannedHardAhead,
+    };
+  }, empty);
+}

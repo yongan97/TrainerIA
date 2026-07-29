@@ -18,6 +18,7 @@ import {
   Timer,
   Bell,
   Flag,
+  Salad,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +55,7 @@ const SECTIONS: { title: string | null; links: { href: string; label: string; ic
       { href: "/alerts", label: "Alertas", icon: Bell },
       { href: "/sleep", label: "Sueño", icon: Moon },
       { href: "/rehab", label: "Rehab", icon: HeartPulse },
+      { href: "/nutricion", label: "Nutrición", icon: Salad },
     ],
   },
   { title: null, links: [{ href: "/settings", label: "Configuración", icon: Settings }] },
