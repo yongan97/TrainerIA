@@ -18,6 +18,7 @@ export const WHOOP = {
     "read:cycles",
     "read:workout",
     "read:profile",
+    "read:body_measurement",
     "offline", // necesario para obtener refresh_token
   ],
 };

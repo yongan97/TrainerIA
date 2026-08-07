@@ -25,6 +25,19 @@ async function whoopGet<T>(
   return (await res.json()) as Paginated<T>;
 }
 
+/** GET de un recurso único (no paginado), p.ej. body measurement. */
+async function whoopGetOne<T>(path: string): Promise<T> {
+  const token = await getValidAccessToken();
+  const res = await fetch(`${WHOOP.apiBase}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(`Whoop GET ${path} falló (${res.status}): ${await res.text()}`);
+  }
+  return (await res.json()) as T;
+}
+
 /** Recorre todas las páginas de un endpoint desde `start` (ISO) hasta ahora. */
 async function fetchAll<T>(path: string, startISO: string): Promise<T[]> {
   const out: T[] = [];
@@ -50,4 +63,11 @@ export const whoopApi = {
     fetchAll<Record<string, unknown>>("/v2/cycle", startISO),
   workouts: (startISO: string) =>
     fetchAll<Record<string, unknown>>("/v2/activity/workout", startISO),
+  /** Medidas corporales: peso, altura, FC máx observada. Requiere scope read:body_measurement. */
+  body: () =>
+    whoopGetOne<{
+      height_meter?: number;
+      weight_kilogram?: number;
+      max_heart_rate?: number;
+    }>("/v2/user/measurement/body"),
 };

@@ -7,6 +7,7 @@ export interface SyncResult {
   sleep: number;
   cycles: number;
   workouts: number;
+  weightKg: number | null; // peso traído de body measurement (si el scope está)
   since: string;
 }
 
@@ -66,11 +67,28 @@ export async function syncWhoop(sinceISO?: string): Promise<SyncResult> {
   if (activityRows.length)
     await upsert(db, "activities", activityRows, "external_id");
 
+  // Body measurement (peso): best-effort. Si el scope todavía no está otorgado
+  // (falta reconectar), no debe romper el sync — se activa al reconectar Whoop.
+  let weightKg: number | null = null;
+  try {
+    const body = await whoopApi.body();
+    if (typeof body.weight_kilogram === "number" && body.weight_kilogram > 0) {
+      weightKg = Math.round(body.weight_kilogram * 10) / 10;
+      await db
+        .from("settings")
+        .update({ weight_kg: weightKg, updated_at: new Date().toISOString() })
+        .eq("id", 1);
+    }
+  } catch {
+    // scope read:body_measurement aún no otorgado; ignorar.
+  }
+
   return {
     recovery: recoveryRows.length,
     sleep: sleepRows.length,
     cycles: cycleRows.length,
     workouts: activityRows.length,
+    weightKg,
     since,
   };
 }
