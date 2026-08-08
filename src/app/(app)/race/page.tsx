@@ -4,6 +4,7 @@ import { Stat } from "@/components/ui/stat";
 import { SetupNotice, EmptyState } from "@/components/ui/setup-notice";
 import { isConfigured, getSettings, getActivities, getCycles } from "@/lib/data";
 import { computePmc } from "@/lib/analytics";
+import { mapGarminSport } from "@/lib/sports/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,16 @@ function hms(sec: number): string {
 function pace(sec: number, meters: number): string {
   const t = Math.round(sec / (meters / 1000));
   return `${Math.floor(t / 60)}:${(t % 60).toString().padStart(2, "0")}/km`;
+}
+function kmh(sec: number, meters: number): string {
+  const v = (meters / 1000) / (sec / 3600);
+  return `${v.toFixed(1)} km/h`;
+}
+
+/** ¿Es ciclismo el objetivo? Usa goal_sport; si no está, infiere por distancia. */
+function goalIsBike(goalSport: string | null, km: number): boolean {
+  if (goalSport) return mapGarminSport(goalSport) === "bike" || goalSport === "bike";
+  return km >= 60; // heurística: distancias largas sin deporte declarado ≈ bici
 }
 
 export default async function RacePage() {
@@ -42,19 +53,51 @@ export default async function RacePage() {
   const today = new Date().toISOString().slice(0, 10);
   const daysToRace = Math.ceil((new Date(settings.goal_date + "T00:00:00").getTime() - new Date(today + "T00:00:00").getTime()) / 86_400_000);
   const goalMeters = settings.goal_distance_km * 1000;
+  const isBike = goalIsBike(settings.goal_sport, settings.goal_distance_km);
 
   const [activities, cycles] = await Promise.all([getActivities(500), getCycles(90)]);
-  const since = new Date(Date.now() - 60 * 86_400_000).toISOString();
-  const runs = activities.filter((a) => a.sport === "run" && a.started_at >= since && (a.distance_m ?? 0) >= 3000 && (a.duration_s ?? 0) > 0);
+  const since = new Date(Date.now() - 90 * 86_400_000).toISOString();
 
+  // Predicción según el deporte del objetivo.
   let predicted: number | null = null;
-  if (runs.length) {
-    let best = Infinity;
-    for (const r of runs) {
-      const eq = (r.duration_s as number) * Math.pow(goalMeters / (r.distance_m as number), RIEGEL);
-      if (eq < best) best = eq;
+  let predictHint = "";
+  let draftedNote: string | null = null;
+
+  if (isBike) {
+    // Ciclismo: estimar por velocidad media de las salidas largas recientes.
+    // El pace/Riegel de running no aplica: en llano y con fueling el tiempo va
+    // por velocidad sostenida, no por decaimiento tipo carrera a pie.
+    const rides = activities.filter(
+      (a) => a.sport === "bike" && a.started_at >= since && (a.distance_m ?? 0) > 0 && (a.duration_s ?? 0) > 0,
+    );
+    // Preferimos salidas largas (≥40 km); si no hay, ≥20 km; si no, todas.
+    const longRides = rides.filter((r) => (r.distance_m ?? 0) >= 40000);
+    const midRides = rides.filter((r) => (r.distance_m ?? 0) >= 20000);
+    const pool = longRides.length ? longRides : midRides.length ? midRides : rides;
+    if (pool.length) {
+      const totalM = pool.reduce((s, r) => s + (r.distance_m ?? 0), 0);
+      const totalS = pool.reduce((s, r) => s + (r.duration_s ?? 0), 0);
+      const speedMps = totalM / totalS; // velocidad media ponderada
+      predicted = goalMeters / speedMps;
+      predictHint = kmh(predicted, goalMeters) + " (solo)";
+      // En un pelotón grande, ir a rueda sube la velocidad ~10-15%.
+      const drafted = predicted / 1.12;
+      draftedNote = `En pelotón (a rueda) podés bajar a ~${hms(drafted)} · ${kmh(drafted, goalMeters)}.`;
     }
-    predicted = best;
+  } else {
+    // Running: Riegel sobre el mejor esfuerzo reciente.
+    const runs = activities.filter(
+      (a) => a.sport === "run" && a.started_at >= since && (a.distance_m ?? 0) >= 3000 && (a.duration_s ?? 0) > 0,
+    );
+    if (runs.length) {
+      let best = Infinity;
+      for (const r of runs) {
+        const eq = (r.duration_s as number) * Math.pow(goalMeters / (r.distance_m as number), RIEGEL);
+        if (eq < best) best = eq;
+      }
+      predicted = best;
+      predictHint = pace(predicted, goalMeters);
+    }
   }
 
   // Forma actual (TSB)
@@ -75,16 +118,30 @@ export default async function RacePage() {
   return (
     <Page>
       <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-6 text-center">
-        <div className="text-sm text-muted-foreground">🎯 {settings.goal_name ?? "Carrera objetivo"} · {settings.goal_distance_km} km</div>
+        <div className="text-sm text-muted-foreground">
+          {isBike ? "🚴" : "🎯"} {settings.goal_name ?? "Objetivo"} · {settings.goal_distance_km} km
+        </div>
         <div className="mt-2 text-4xl font-bold text-primary sm:text-5xl">{daysToRace <= 0 ? "¡Hoy!" : daysToRace}</div>
         {daysToRace > 0 && <div className="text-sm text-muted-foreground">días para la carrera · {new Date(settings.goal_date + "T00:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "2-digit", month: "long" })}</div>}
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Stat label="Tiempo estimado" value={predicted != null ? hms(predicted) : "—"} hint={predicted != null ? pace(predicted, goalMeters) : "sin datos de running"} />
+        <Stat
+          label="Tiempo estimado"
+          value={predicted != null ? hms(predicted) : "—"}
+          hint={predicted != null ? predictHint : isBike ? "sin salidas de bici" : "sin datos de running"}
+        />
         <Stat label="Forma actual (TSB)" value={tsb != null ? tsb.toFixed(1) : "—"} className={tsb != null && tsb >= 0 ? "text-primary" : "text-yellow-400"} />
         <Stat label="Distancia" value={String(settings.goal_distance_km)} suffix="km" />
       </div>
+
+      {draftedNote && (
+        <Card className="mb-6">
+          <CardContent className="py-4 text-sm text-muted-foreground">
+            {draftedNote}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="py-5">

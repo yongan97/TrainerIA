@@ -82,6 +82,7 @@ export interface Settings {
   goal_name: string | null;
   goal_date: string | null;
   goal_distance_km: number | null;
+  goal_sport: string | null; // "bike" | "run" | ... para predecir con el modelo correcto
   updated_at: string;
 }
 

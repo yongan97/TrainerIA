@@ -58,6 +58,13 @@ export function SettingsForm({ initial }: { initial: Settings | null }) {
           <F name="goal_name" label="Nombre" def={initial?.goal_name ?? null} type="text" />
           <F name="goal_date" label="Fecha" def={initial?.goal_date ?? null} type="date" />
           <F name="goal_distance_km" label="Distancia" unit="km" def={initial?.goal_distance_km ?? null} />
+          <label className="text-sm">
+            <span className="mb-1 block text-muted-foreground">Deporte</span>
+            <select name="goal_sport" defaultValue={initial?.goal_sport ?? "bike"} className={field}>
+              <option value="bike">Ciclismo</option>
+              <option value="run">Running</option>
+            </select>
+          </label>
         </div>
       </div>
       <div className="flex items-center gap-3">
