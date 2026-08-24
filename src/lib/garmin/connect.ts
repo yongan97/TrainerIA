@@ -184,3 +184,54 @@ export async function fetchGarminSplits(activityId: string): Promise<Split[]> {
     return [];
   }
 }
+
+/** Extrae la dinámica de pedaleo del resumen completo de una actividad. */
+function dynamicsFrom(s: GAct): Record<string, number | null> {
+  return {
+    power_balance_left: num(s.avgLeftBalance),
+    left_torque_eff: num(s.avgLeftTorqueEffectiveness),
+    right_torque_eff: num(s.avgRightTorqueEffectiveness),
+    left_pedal_smooth: num(s.avgLeftPedalSmoothness),
+    right_pedal_smooth: num(s.avgRightPedalSmoothness),
+    seated_power: num(s.avgSeatedPower),
+    standing_power: num(s.avgStandingPower),
+    standing_time_s: num(s.standingTime),
+  };
+}
+
+/**
+ * Baja la dinámica de pedaleo (efectividad de torque, suavidad, balance) de una
+ * lista de actividades. El endpoint de resumen (getActivities) no la trae; el de
+ * la actividad completa sí. Login único para toda la lista. Defensivo.
+ * Con `debug` devuelve además las claves crudas de la primera actividad.
+ */
+export async function fetchGarminDynamics(
+  activityIds: string[],
+  debug = false,
+): Promise<{ dynamics: Record<string, Record<string, number | null>>; debugKeys?: string[] }> {
+  const cfg = garminConfigured();
+  if (!cfg.ok) return { dynamics: {} };
+  const dynamics: Record<string, Record<string, number | null>> = {};
+  let debugKeys: string[] | undefined;
+  try {
+    const gc = await loginClient();
+    const base = (gc as unknown as { url: { ACTIVITY: string } }).url.ACTIVITY;
+    for (const id of activityIds) {
+      try {
+        const full = (await gc.get(`${base}${id}`)) as GAct;
+        const s = ((full.summaryDTO as GAct) ?? full) as GAct;
+        if (debug && !debugKeys) {
+          debugKeys = [...Object.keys(full), ...Object.keys((full.summaryDTO as GAct) ?? {})]
+            .filter((k) => /torque|smooth|balance|phase|pco|seated|standing|power/i.test(k));
+        }
+        const d = dynamicsFrom(s);
+        if (Object.values(d).some((v) => v != null)) dynamics[id] = d;
+      } catch {
+        // saltar esta actividad
+      }
+    }
+  } catch {
+    return { dynamics, debugKeys };
+  }
+  return { dynamics, debugKeys };
+}
