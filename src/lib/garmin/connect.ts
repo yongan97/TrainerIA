@@ -185,17 +185,23 @@ export async function fetchGarminSplits(activityId: string): Promise<Split[]> {
   }
 }
 
-/** Extrae la dinámica de pedaleo del resumen completo de una actividad. */
+/** Extrae la dinámica de pedaleo del resumen completo de una actividad.
+ * Nombres de campo del endpoint de actividad completa (distintos del listado).
+ * Torque effectiveness / pedal smoothness NO los expone Garmin acá (solo FIT);
+ * en cambio sí da Power Phase, que describe el arco de fuerza del pedaleo. */
 function dynamicsFrom(s: GAct): Record<string, number | null> {
   return {
-    power_balance_left: num(s.avgLeftBalance),
-    left_torque_eff: num(s.avgLeftTorqueEffectiveness),
-    right_torque_eff: num(s.avgRightTorqueEffectiveness),
-    left_pedal_smooth: num(s.avgLeftPedalSmoothness),
-    right_pedal_smooth: num(s.avgRightPedalSmoothness),
-    seated_power: num(s.avgSeatedPower),
-    standing_power: num(s.avgStandingPower),
+    power_balance_left: num(s.leftBalance),
+    power_balance_right: num(s.rightBalance),
+    left_pp_arc: num(s.leftPowerPhaseArcLength),
+    right_pp_arc: num(s.rightPowerPhaseArcLength),
+    left_pp_center: num(s.leftPowerPhaseArcCenter),
+    right_pp_center: num(s.rightPowerPhaseArcCenter),
+    seated_power: num(s.averageSeatedPower),
+    standing_power: num(s.averageStandingPower),
+    seated_time_s: num(s.seatedTime),
     standing_time_s: num(s.standingTime),
+    garmin_ftp: num(s.functionalThresholdPower),
   };
 }
 
