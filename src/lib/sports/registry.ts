@@ -35,6 +35,13 @@ export const SPORTS: Record<SportId, SportConfig> = {
       { key: "tss", label: "TSS", unit: "" },
       { key: "avg_cadence", label: "Cadencia", unit: "rpm" },
       { key: "max_power", label: "Potencia máx", unit: "W" },
+      // Dinámica de pedaleo por pierna (Garmin Rally u otro medidor dual).
+      { key: "power_balance_left", label: "Balance izq.", unit: "%" },
+      { key: "left_torque_eff", label: "Efect. torque izq.", unit: "%" },
+      { key: "right_torque_eff", label: "Efect. torque der.", unit: "%" },
+      { key: "left_pedal_smooth", label: "Suavidad izq.", unit: "%" },
+      { key: "right_pedal_smooth", label: "Suavidad der.", unit: "%" },
+      { key: "seated_power", label: "Potencia sentado", unit: "W" },
     ],
   },
   run: {

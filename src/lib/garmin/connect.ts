@@ -85,6 +85,16 @@ export function mapGarminActivity(a: GAct) {
           max_power: num(a.maxPower),
           normalized_power: num(a.normPower),
           avg_cadence: num(a.averageBikingCadenceInRevPerMinute),
+          // Dinámica de pedaleo (medidor por pierna, p.ej. Garmin Rally).
+          // Defensivo: solo se llenan si el sensor los envía.
+          power_balance_left: num(a.avgLeftBalance),
+          seated_power: num(a.avgSeatedPower),
+          standing_time_s: num(a.standingTime),
+          strokes: num(a.strokes),
+          left_torque_eff: num(a.avgLeftTorqueEffectiveness),
+          right_torque_eff: num(a.avgRightTorqueEffectiveness),
+          left_pedal_smooth: num(a.avgLeftPedalSmoothness),
+          right_pedal_smooth: num(a.avgRightPedalSmoothness),
         }
       : sport === "run"
         ? {
