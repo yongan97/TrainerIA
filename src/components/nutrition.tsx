@@ -3,7 +3,53 @@
 import { useState } from "react";
 import { ChevronDown, Clock, Utensils } from "lucide-react";
 import type { Recipe, NutritionSlot } from "@/lib/nutrition";
+import type { Meal } from "@/lib/nutrition-plan";
 import { cn } from "@/lib/utils";
+
+/** Tarjeta de comida del plan (desayuno/almuerzo/merienda/cena), desplegable. */
+export function MealCard({ meal }: { meal: Meal }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-lg border border-border bg-card">
+      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-3 p-4 text-left">
+        <span className="flex-1">
+          <span className="font-medium text-foreground">{meal.name}</span>
+          <span className="ml-2 text-xs text-muted-foreground">{meal.time}</span>
+        </span>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="space-y-3 border-t border-border px-4 pb-4 pt-3 text-sm">
+          {meal.base && (
+            <ul className="space-y-0.5 text-foreground/90">
+              {meal.base.map((b, i) => (
+                <li key={i}>{b}</li>
+              ))}
+            </ul>
+          )}
+          <div>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground/60">Opciones</p>
+            <ul className="space-y-1.5 text-foreground/90">
+              {meal.options.map((o, i) => (
+                <li key={i} className="flex gap-1.5">
+                  <span className="text-primary">›</span>
+                  {o}
+                </li>
+              ))}
+            </ul>
+          </div>
+          {meal.notes && (
+            <ul className="space-y-1 rounded-md bg-background/50 p-3 text-xs text-muted-foreground">
+              {meal.notes.map((n, i) => (
+                <li key={i}>{n}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const SLOT_ACCENT: Record<NutritionSlot, string> = {
   pre: "text-sky-400",
