@@ -7,80 +7,170 @@
 export const PLAN_AUTHOR = "Lic. Floreani Carla · Nutricionista";
 export const PLAN_PERIOD = "Agosto 2026";
 
+export interface Plate {
+  proteina: string[];
+  hidratos: string[];
+  vegetales: string[];
+  hidratosNota?: string;
+}
+
 export interface Meal {
   id: "desayuno" | "almuerzo" | "merienda" | "cena";
   name: string;
   time: string;
-  base?: string[]; // componentes fijos
-  options: string[]; // alternativas ("ó")
+  /** Hora local (AR) desde la que esta comida es "la que toca". */
+  fromHour: number;
+  emoji: string;
+  base?: string[];
+  /** Opciones sueltas (desayuno / merienda). */
+  options?: string[];
+  /** Estructura de plato (almuerzo / cena). */
+  plate?: Plate;
+  alternativas?: string[];
   notes?: string[];
+  /** Opciones prácticas para llevar/comprar. */
+  paraLlevar?: string[];
 }
+
+const DESAYUNO_OPTS = [
+  "Tostada integral + huevos revueltos (1 entero + 1 clara)",
+  "Tostada integral + queso port salut y tomate",
+  "Tostada integral + mantequilla de maní (1 cdita)",
+  "Tostada integral + ricota magra u hummus",
+  "Bowl de granola o cereales (5 cdas) con yogur o leche",
+  "Pancakes de avena (6 cdas) + 1 huevo + 1 clara",
+  "Porridge de avena (5 cdas + ½ taza de leche)",
+];
+
+const PROTEINAS = [
+  "1-2 bifes (180-200 g)",
+  "1-2 milanesas (carne, pollo o cerdo)",
+  "¼ de pollo al horno",
+  "2-3 hamburguesas caseras",
+  "2-3 rodajas de carne al horno",
+  "180-200 g de legumbres cocidas (o veggie burger, seitán, soja, tofu)",
+  "2 huevos + 2 claras (omelette con port salut)",
+  "180 g de ricota magra",
+  "1 lata grande de atún al natural",
+  "2-3 filet de pescado (merluza, gatuzo, brótola)",
+];
+
+const HIDRATOS = [
+  "Arroz",
+  "Puré de papa",
+  "Papas",
+  "Batata (hervida o al horno)",
+  "Ensalada de papa y huevo",
+  "Fideos",
+  "Quinoa",
+  "Cous cous",
+  "Polenta",
+];
+
+const VEGETALES = [
+  "Ensalada (tomate, lechuga, rúcula…)",
+  "Puré de zapallo",
+  "Revuelto de zapallitos",
+  "Vegetales al horno",
+  "Vegetales al wok",
+];
+
+const ALTERNATIVAS_PLATO = [
+  "1-2 porciones de tarta (atún, pollo o vegetales con ricota) + ensalada + 3 cdas de hidratos",
+  "Pastel de papa",
+  "Guiso de lentejas (con papa o batata)",
+];
 
 export const MEALS: Meal[] = [
   {
     id: "desayuno",
     name: "Desayuno",
     time: "7:30–8:30 h",
-    base: ["Infusión a gusto", "+ ½ taza de leche ó 1 vaso de yogur descremado ó 1 licuado de frutas (opcional)"],
-    options: [
-      "1 tostada integral (masa madre/centeno) con huevos revueltos (1 entero + 1 clara) ó queso port salut + tomate ó mantequilla de maní (1 cdita) ó ricota magra ó hummus. Podés sumar ¼ de palta.",
-      "Bowl de cereales o granola (5 cdas) con yogur o leche + opcional banana + mantequilla de maní (1 cdita).",
-      "Pancakes de avena (6 cdas) + 1 huevo + 1 clara + opcional ½ banana. Podés hacer varios y freezar. Con fruta fresca + mantequilla de maní.",
-      "Porridge de avena (5 cdas + ½ taza de leche) con fruta fresca + mantequilla de maní.",
-    ],
+    fromHour: 5,
+    emoji: "🍳",
+    base: ["Infusión a gusto", "½ taza de leche ó 1 yogur descremado ó 1 licuado de frutas (opcional)"],
+    options: DESAYUNO_OPTS,
     notes: [
-      "Podés sumar una fruta fresca a cualquier opción.",
+      "Podés sumar ¼ de palta a las tostadas, y una fruta fresca a cualquier opción.",
       "Ideal romper el ayuno con 1 puñado de frutos secos.",
-      "Se puede dividir en 2 → PRE-entreno: tostada (pan blanco) con miel o dulce de membrillo/batata · POST-entreno: tostada con huevos (3 claras) ó pancake.",
+      "Si entrenás: dividilo en dos → PRE: tostada de pan blanco con miel o dulce de membrillo. POST: tostada con huevos (3 claras) ó pancake.",
     ],
   },
   {
     id: "almuerzo",
     name: "Almuerzo",
     time: "13:00 h",
-    options: [
-      "Proteína (elegí una): 1-2 bifes (180-200g) ó 1-2 milanesas (carne/pollo/cerdo) ó ¼ de pollo al horno ó 2-3 hamburguesas caseras ó 2-3 rodajas de carne al horno ó 180-200g de legumbres cocidas (veggie burger, seitán, soja no pre-frita, tofu) ó 2 huevos + 2 claras (omelette con queso port salut) ó 180g ricota magra ó 1 lata grande de atún al natural ó 2-3 filet de pescado (gatuzo, merluza, brótola).",
-      "+ 1/3 del plato de hidratos (~10 cdas): arroz ó puré/papas ó batata ó ensalada de papa y huevo ó fideos ó quinoa ó cous cous ó polenta.",
-      "+ 1/3 del plato de vegetales: ensalada (tomate, lechuga, rúcula…) ó puré de zapallo ó revuelto de zapallitos ó vegetales al horno/wok.",
-    ],
-    notes: [
-      "Alternativa: 1-2 porciones de tarta (atún/pollo/vegetales con ricota, masa casera) + ensalada + 3 cdas de hidratos.",
-      "Alternativa: pastel de papa ó guiso de lentejas (con papa/batata).",
-      "Ojo con los almuerzos que compramos comida.",
-    ],
+    fromHour: 11,
+    emoji: "🍽️",
+    plate: {
+      proteina: PROTEINAS,
+      hidratos: HIDRATOS,
+      vegetales: VEGETALES,
+      hidratosNota: "1/3 del plato (~10 cdas)",
+    },
+    alternativas: ALTERNATIVAS_PLATO,
+    notes: ["Ojo con los almuerzos que compramos comida."],
   },
   {
     id: "merienda",
     name: "Merienda",
     time: "17:00–17:30 h",
-    base: ["Infusión a gusto", "+ ½ taza de leche ó 1 yogur descremado ó 1 licuado de frutas (opcional)"],
-    options: [
-      "1 tostada integral con huevos revueltos (1+1 clara) ó queso port salut + tomate ó mantequilla de maní ó ricota magra ó hummus (+ ¼ palta opcional).",
-      "Bowl de cereales/granola (5 cdas) con yogur o leche + opcional banana + mantequilla de maní.",
-      "Pancakes de avena (6 cdas) + 1 huevo + 1 clara + opcional ½ banana, con fruta + mantequilla de maní.",
-      "Porridge de avena (5 cdas + ½ taza de leche) con fruta + mantequilla de maní.",
-    ],
-    notes: [
-      "⭐ Momento bisagra del día — prestarle atención.",
-      "Para el trabajo: sándwich de port salut y tomate · yogur Ser Pro con granola · pancake · barrita de proteína (Kibar/Crudda/Pont/Integra) + banana · barrita de cereal + yogur + banana.",
+    fromHour: 15,
+    emoji: "🥪",
+    base: ["Infusión a gusto", "½ taza de leche ó 1 yogur descremado ó 1 licuado de frutas (opcional)"],
+    options: DESAYUNO_OPTS,
+    notes: ["⭐ Momento bisagra del día — prestarle atención."],
+    paraLlevar: [
+      "Sándwich de port salut y tomate",
+      "Yogur (Ser Pro) con granola o cereales",
+      "Pancake solo o con mantequilla de maní",
+      "Barrita de proteína (Kibar, Crudda, Pont, Integra) + banana",
+      "Barrita de cereal (Integra, Muecas) + yogur + banana",
     ],
   },
   {
     id: "cena",
     name: "Cena",
     time: "20:30 h",
-    options: [
-      "Proteína (elegí una): igual que el almuerzo (bifes, milanesas, pollo, hamburguesas, legumbres, huevos, ricota, atún, pescado).",
-      "+ 1/3 del plato de hidratos (~8 cdas): arroz ó puré/papas ó batata ó fideos ó quinoa ó cous cous ó polenta.",
-      "+ 1/3 del plato de vegetales: ensalada ó puré de zapallo ó zapallitos ó vegetales al horno/wok.",
-    ],
-    notes: [
-      "Alternativa: tarta (atún/pollo/vegetales con ricota) + ensalada + 3 cdas de hidratos.",
-      "Alternativa: pastel de papa ó guiso de lentejas.",
-      "🚴 CENA PRE-FONDO: un buen plato de pastas con salsa muy liviana o aceite de oliva + queso de rallar + 1 pizca de sal.",
-    ],
+    fromHour: 19,
+    emoji: "🌙",
+    plate: {
+      proteina: PROTEINAS,
+      hidratos: HIDRATOS,
+      vegetales: VEGETALES,
+      hidratosNota: "1/3 del plato (~8 cdas)",
+    },
+    alternativas: ALTERNATIVAS_PLATO,
+    notes: ["🚴 CENA PRE-FONDO: un buen plato de pastas con salsa muy liviana o aceite de oliva + queso de rallar + 1 pizca de sal."],
   },
 ];
+
+/** Hora local de Buenos Aires (UTC-3, sin horario de verano). */
+export function hourAR(now: Date = new Date()): number {
+  return new Date(now.getTime() - 3 * 3600 * 1000).getUTCHours();
+}
+
+/** Qué comida "toca" según la hora local. */
+export function currentMeal(now: Date = new Date()): Meal {
+  const h = hourAR(now);
+  let pick = MEALS[0];
+  for (const m of MEALS) if (h >= m.fromHour) pick = m;
+  return pick;
+}
+
+/** Sugerencia concreta y estable dentro del día (rota día a día). */
+export function suggestion(meal: Meal, dateISO: string): string[] {
+  const seed = Number(dateISO.replace(/-/g, "")) + meal.fromHour;
+  const pick = (arr: string[], off: number) => arr[(seed + off) % arr.length];
+  if (meal.plate) {
+    return [
+      pick(meal.plate.proteina, 0),
+      pick(meal.plate.hidratos, 3),
+      pick(meal.plate.vegetales, 5),
+    ];
+  }
+  return [pick(meal.options ?? [], 0)];
+}
 
 /** Combustible durante entrenamientos largos (>60'). Clave para fondos. */
 export const INTRA_TRAINING = {

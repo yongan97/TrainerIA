@@ -1,12 +1,12 @@
-import { Droplets, Sparkles, HeartPulse, Zap, Pill, Apple, Info, PartyPopper, TrendingUp } from "lucide-react";
+import { Droplets, Sparkles, HeartPulse, Zap, Pill, Apple, Info, PartyPopper, TrendingUp, UtensilsCrossed } from "lucide-react";
 import { SetupNotice } from "@/components/ui/setup-notice";
-import { RecipeSection, MealCard } from "@/components/nutrition";
+import { RecipeSection, MealCard, MealBody } from "@/components/nutrition";
 import { isConfigured, getNutritionContext, getNutritionLogs, getRecovery } from "@/lib/data";
 import { LIBRARY, decideFocus, type NutritionSlot } from "@/lib/nutrition";
 import {
   MEALS, INTRA_TRAINING, SUPPLEMENTS, SNACKS, RECOMMENDATIONS, POSTRE, FREE_MEAL,
   PLAN_AUTHOR, PLAN_PERIOD,
-  currentStreak, adherence, dayScore, type NutritionLog,
+  currentStreak, adherence, dayScore, currentMeal, suggestion, type NutritionLog,
 } from "@/lib/nutrition-plan";
 import { NutritionChecklist } from "@/components/nutrition-checklist";
 import { cn } from "@/lib/utils";
@@ -45,10 +45,47 @@ export default async function NutricionPage() {
   const adh7 = adherence(logs, 7, today);
   const insight = adherenceVsRecovery(logs, recovery);
   // ¿Hoy hay (o hubo) sesión larga? Para resaltar el combustible en ruta.
+  const meal = currentMeal();
+  const sug = suggestion(meal, today);
   const longToday = (ctx.todayMinutes ?? 0) >= 60 || (ctx.todayStrain ?? 0) >= 12;
 
   return (
     <Page>
+      {/* AHORA: qué comer en este momento */}
+      <section className="mb-6 rounded-xl border border-primary/35 bg-primary/5 p-5">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
+          <UtensilsCrossed className="h-3.5 w-3.5" />
+          Ahora te toca
+        </div>
+        <h2 className="mt-1.5 flex items-baseline gap-2 text-2xl font-bold tracking-tight text-foreground">
+          <span>{meal.emoji}</span>{meal.name}
+          <span className="text-sm font-normal text-muted-foreground">{meal.time}</span>
+        </h2>
+
+        <div className="mt-4 rounded-lg border border-border bg-background/60 p-4">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
+            Sugerencia de hoy — si no querés pensar, comé esto
+          </div>
+          <ul className="space-y-1.5">
+            {sug.map((x, i) => (
+              <li key={i} className="flex items-start gap-2 text-[15px] text-foreground">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                {x}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <details className="group mt-3">
+          <summary className="cursor-pointer list-none text-sm text-primary hover:underline">
+            Ver todas las opciones del {meal.name.toLowerCase()} →
+          </summary>
+          <div className="mt-3 rounded-lg border border-border bg-background/40 p-4">
+            <MealBody meal={meal} />
+          </div>
+        </details>
+      </section>
+
       {/* Recomendación contextual del día */}
       <div className={cn("mb-6 rounded-xl border p-5", ACCENT[focus.slot])}>
         <div className="flex items-center gap-2 text-sm font-medium">
@@ -100,7 +137,7 @@ export default async function NutricionPage() {
         <h2 className="mb-1 text-lg font-semibold tracking-tight">Mi plan diario</h2>
         <p className="mb-3 text-sm text-muted-foreground">Las 4 comidas con sus opciones. Tocá para desplegar.</p>
         <div className="space-y-2">
-          {MEALS.map((m) => <MealCard key={m.id} meal={m} />)}
+          {MEALS.map((m) => <MealCard key={m.id} meal={m} defaultOpen={m.id === meal.id} />)}
         </div>
         <p className="mt-3 text-xs text-muted-foreground/70">Postre (opcional): {POSTRE}</p>
       </section>
