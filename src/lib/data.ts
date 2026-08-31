@@ -436,3 +436,19 @@ export function getNutritionContext(today: string): Promise<NutritionContext> {
     };
   }, empty);
 }
+
+import type { NutritionLog } from "@/lib/nutrition-plan";
+
+/** Registros del checklist de nutrición (para racha y adherencia). */
+export function getNutritionLogs(days = 60): Promise<NutritionLog[]> {
+  return safe(async () => {
+    const db = getAdminClient();
+    const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+    const { data } = await db
+      .from("nutrition_logs")
+      .select("*")
+      .gte("date", since)
+      .order("date", { ascending: false });
+    return (data ?? []) as NutritionLog[];
+  }, []);
+}

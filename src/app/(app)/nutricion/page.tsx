@@ -1,12 +1,14 @@
-import { Droplets, Sparkles, HeartPulse, Zap, Pill, Apple, Info, PartyPopper } from "lucide-react";
+import { Droplets, Sparkles, HeartPulse, Zap, Pill, Apple, Info, PartyPopper, TrendingUp } from "lucide-react";
 import { SetupNotice } from "@/components/ui/setup-notice";
 import { RecipeSection, MealCard } from "@/components/nutrition";
-import { isConfigured, getNutritionContext } from "@/lib/data";
+import { isConfigured, getNutritionContext, getNutritionLogs, getRecovery } from "@/lib/data";
 import { LIBRARY, decideFocus, type NutritionSlot } from "@/lib/nutrition";
 import {
   MEALS, INTRA_TRAINING, SUPPLEMENTS, SNACKS, RECOMMENDATIONS, POSTRE, FREE_MEAL,
   PLAN_AUTHOR, PLAN_PERIOD,
+  currentStreak, adherence, dayScore, type NutritionLog,
 } from "@/lib/nutrition-plan";
+import { NutritionChecklist } from "@/components/nutrition-checklist";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +34,16 @@ export default async function NutricionPage() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const ctx = await getNutritionContext(today);
+  const [ctx, logs, recovery] = await Promise.all([
+    getNutritionContext(today),
+    getNutritionLogs(60),
+    getRecovery(60),
+  ]);
   const focus = decideFocus(ctx);
+  const todayLog = logs.find((l) => l.date === today) ?? null;
+  const streak = currentStreak(logs, today);
+  const adh7 = adherence(logs, 7, today);
+  const insight = adherenceVsRecovery(logs, recovery);
   // ¿Hoy hay (o hubo) sesión larga? Para resaltar el combustible en ruta.
   const longToday = (ctx.todayMinutes ?? 0) >= 60 || (ctx.todayStrain ?? 0) >= 12;
 
@@ -51,6 +61,17 @@ export default async function NutricionPage() {
           <p className="mt-3 flex items-start gap-2 rounded-lg bg-background/40 p-3 text-sm text-foreground/90">
             <Droplets className="mt-0.5 h-4 w-4 shrink-0 text-sky-400" />
             {focus.hydration}
+          </p>
+        )}
+      </div>
+
+      {/* Checklist diario — el motor de adherencia */}
+      <div className="mb-6">
+        <NutritionChecklist date={today} initial={todayLog} streak={streak} adherence7={adh7} />
+        {insight && (
+          <p className="mt-3 flex items-start gap-2 rounded-lg border border-primary/25 bg-primary/5 p-3 text-sm text-foreground/90">
+            <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            {insight}
           </p>
         )}
       </div>
@@ -166,4 +187,28 @@ function Page({ children }: { children: React.ReactNode }) {
       {children}
     </>
   );
+}
+
+/** Cruza adherencia al plan con el recovery del día siguiente: el bucle motivador. */
+function adherenceVsRecovery(
+  logs: NutritionLog[],
+  recovery: { date: string; recovery_score: number | null }[],
+): string | null {
+  const recByDate = new Map(recovery.map((r) => [r.date, r.recovery_score]));
+  const good: number[] = [];
+  const bad: number[] = [];
+  for (const l of logs) {
+    const next = new Date(new Date(l.date + "T00:00:00").getTime() + 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+    const rec = recByDate.get(next);
+    if (rec == null) continue;
+    (dayScore(l) >= 0.7 ? good : bad).push(rec);
+  }
+  if (good.length < 3 || bad.length < 3) return null;
+  const avg = (a: number[]) => a.reduce((s, v) => s + v, 0) / a.length;
+  const g = Math.round(avg(good));
+  const b = Math.round(avg(bad));
+  if (g - b < 3) return null;
+  return `Los días que cumplís el plan, tu recovery del día siguiente promedia ${g}% — contra ${b}% cuando no. Comer bien te está rindiendo.`;
 }
