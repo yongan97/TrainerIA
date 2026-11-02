@@ -79,7 +79,7 @@ export const SAUCES: Sauce[] = [
     use: "Al lado de la ensalada de garbanzos, o en una tostada de merienda.",
     keeps: "3–4 días en la heladera.",
     minutes: 8,
-    summary: "Garbanzos de lata, tahini o oliva, limón y ajo.",
+    summary: "Garbanzos de lata, aceite de oliva, limón y ajo.",
     ingredients: [
       u("garbanzos-lata", "Lata de garbanzos", 1, "almacen"),
       ml("aceite-oliva", "Aceite de oliva", 30, "almacen"),

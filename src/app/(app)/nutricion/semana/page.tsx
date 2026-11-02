@@ -10,9 +10,10 @@ export default async function SemanaPage() {
     <div>
       <h2 className="mb-1 text-2xl font-semibold tracking-tight">La semana</h2>
       <p className="mb-4 text-base text-muted-foreground">
-        Base del plan del entrenador, adaptada: sin tomate crudo, sin berenjena, sin atún de lata.
-        Carne magra tres veces (una es milanesa al horno), pollo dos, pescado tres, legumbres de lata dos.
-        Cambiar solo ofrece un equivalente: un bife no se vuelve pollo.
+        Plan del entrenador, de lunes a domingo. Cítrico en cada desayuno. Carne roja dos veces
+        (corte magro y milanesas al horno), pescado tres (merluza, atún rojo, salmón), legumbres de lata dos.
+        Sin tomate crudo, sin berenjena, sin atún de lata y sin mariscos. La merienda no está en el papel:
+        es fruta, yogur o pan integral según la carga. Cambiar solo ofrece un equivalente del mismo tipo.
       </p>
       <WeekBoard days={view.days} today={today} weightKg={view.weightKg} />
     </div>

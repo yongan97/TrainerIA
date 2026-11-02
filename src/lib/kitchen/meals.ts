@@ -26,11 +26,13 @@ function plate(
 const CITRICO: Ingredient[] = [u("citrico", "Naranja o pomelo", 1, "verduleria")];
 
 /**
- * Semana mediterránea a partir del plan del entrenador.
- * Cambios fijos: sin tomate crudo (zanahoria, pepino o palta), sin berenjena
- * (zapallito), sin atún de lata (pollo, huevo o atún rojo), más carne magra,
- * pollo como máximo dos veces, pescado 2–3 (merluza, salmón, atún rojo),
- * legumbres de lata 1–2 veces. Nunca mariscos.
+ * Semana del plan del entrenador, con principios mediterráneos.
+ * Cítrico en cada desayuno. Plato de Harvard. Aderezo: oliva, sal y limón.
+ * Cambios fijos sobre el papel: tomate crudo → zanahoria, pepino o palta;
+ * berenjena → zapallito; arroz con atún → arroz con huevo.
+ * Carne roja máximo 2 (corte magro y milanesas al horno). Pescado 3
+ * (merluza, salmón, atún rojo). Legumbres de lata 2. Nunca mariscos,
+ * sardinas, atún de lata ni chimichurri. Aceite de oliva como grasa.
  */
 export const MEAL_OPTIONS: MealOption[] = [
   // ——— Desayunos: cítrico todos los días ———
@@ -69,14 +71,15 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...CITRICO,
       u("pan-integral", "Pan integral", 2, "almacen"),
       u("palta", "Palta", 0.5, "verduleria"),
-      u("huevo", "Huevo", 2, "almacen"),
+      u("huevo", "Huevo", 1, "almacen"),
       u("fruta", "Fruta de estación", 1, "verduleria"),
+      g("nueces", "Nueces", 15, "almacen"),
       g("sal", "Sal", 1, "almacen"),
     ],
     steps: [
       { text: "Poné el cítrico en la mesa. Tostá las dos rebanadas.", seconds: 180, timerLabel: "Tostada" },
-      { text: "Cociná los huevos como te gusten (revueltos o a la plancha) con apenas aceite.", seconds: 180, timerLabel: "Huevos" },
-      { text: "Pisá la palta sobre la tostada, salá y apoyá el huevo. La fruta va al final." },
+      { text: "Cociná el huevo como te guste (revuelto o a la plancha) con apenas aceite de oliva.", seconds: 180, timerLabel: "Huevo" },
+      { text: "Pisá la palta sobre la tostada, salá y apoyá el huevo. Nueces y fruta al final." },
     ],
   }),
   plate({
@@ -85,16 +88,17 @@ export const MEAL_OPTIONS: MealOption[] = [
     group: "desayuno",
     title: "Cítrico, yogur y granola",
     minutes: 3,
-    summary: "Yogur con granola. El más rápido de la semana.",
+    summary: "Yogur con granola y un puñado de nueces. El más rápido de la semana.",
     plate: { protein: "Yogur", carb: "Granola", veg: "—" },
     carbBoost: "Sumá una banana en rodajas.",
     ingredients: [
       ...CITRICO,
       g("yogur-natural", "Yogur natural", 200, "almacen"),
       g("granola", "Granola", 40, "almacen"),
+      g("nueces", "Nueces", 15, "almacen"),
     ],
     steps: [
-      { text: "Cítrico, y en el mismo bowl el yogur con la granola. Si entrenás a la mañana, comelo con una hora de margen." },
+      { text: "Cítrico, y en el mismo bowl el yogur, la granola y las nueces. Si entrenás a la mañana, comelo con una hora de margen." },
     ],
   }),
   plate({
@@ -103,19 +107,20 @@ export const MEAL_OPTIONS: MealOption[] = [
     group: "desayuno",
     title: "Cítrico, pan, queso fresco y mermelada",
     minutes: 5,
-    summary: "Pan integral, queso fresco y mermelada light. Sin tomate.",
-    plate: { protein: "Queso fresco", carb: "Pan + mermelada", veg: "Cítrico" },
-    carbBoost: "Una fruta al lado, o un poco más de mermelada.",
+    summary: "Pan integral, queso fresco y un poco de mermelada BC. Sin tomate.",
+    plate: { protein: "Queso fresco", carb: "Pan + mermelada BC", veg: "Cítrico" },
+    carbBoost: "Una fruta al lado. La mermelada no se agranda: es el toque dulce del día.",
     ingredients: [
       ...CITRICO,
       u("pan-integral", "Pan integral", 2, "almacen"),
       g("queso-fresco", "Queso fresco", 60, "almacen"),
-      g("mermelada", "Mermelada light", 20, "almacen"),
+      g("mermelada", "Mermelada BC", 15, "almacen"),
       u("fruta", "Fruta de estación", 1, "verduleria"),
+      g("nueces", "Nueces", 15, "almacen"),
     ],
     steps: [
       { text: "Tostá el pan.", seconds: 180, timerLabel: "Tostada" },
-      { text: "Untá la mermelada en una y el queso fresco en la otra. Cítrico y fruta al lado." },
+      { text: "Untá poca mermelada BC en una y el queso fresco en la otra. Cítrico, nueces y fruta al lado." },
     ],
   }),
   plate({
@@ -257,7 +262,7 @@ export const MEAL_OPTIONS: MealOption[] = [
     ],
   }),
 
-  // ——— Carnes (2–3 en la semana: nalga, cuadril, milanesas) ———
+  // ——— Carne roja, máximo dos en la semana: corte magro y milanesas. El bife y la hamburguesa son equivalentes de esos días, no un tercer turno. ———
   plate({
     id: "bife-nalga",
     meal: "almuerzo",
@@ -338,7 +343,7 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Horno a 200 °C. Pasá las milanesas por huevo batido y pan rallado. Aceite apenas en la placa, no una pileta." },
+      { text: "Horno a 200 °C. Pasá las milanesas por huevo batido y pan rallado. Aceite de oliva apenas en la placa, no una pileta." },
       { text: "Horneá girando a la mitad.", seconds: 1320, timerLabel: "Horno" },
       { text: "El arroz integral va en agua hirviendo con sal.", seconds: 1500, timerLabel: "Arroz" },
       { text: "Armá la ensalada sin tomate: rúcula, zanahoria, remolacha, morrón y pepino. Oliva, sal y limón." },
@@ -365,13 +370,42 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Horno a 200 °C. Papa en gajos con sal y poco aceite, a la placa.", seconds: 1800, timerLabel: "Papa" },
+      { text: "Horno a 200 °C. Papa en gajos con sal y poco aceite de oliva, a la placa.", seconds: 1800, timerLabel: "Papa" },
       { text: "Formá dos hamburguesas. Sal por afuera. A la placa los últimos 15 minutos.", seconds: 900, timerLabel: "Carne" },
       { text: "Ensalada de hojas, zanahoria y pepino. Salsa de yogur, limón y ajo arriba de la carne." },
     ],
   }),
 
-  // ——— Pollo: como máximo dos en la semana base ———
+  // ——— Pollo: los días del plan (lunes, jueves y domingo), no en todos los platos ———
+  plate({
+    id: "pollo-plancha",
+    meal: "almuerzo",
+    slots: ["almuerzo", "cena"],
+    group: "pollo",
+    title: "Pollo a la plancha con quinoa",
+    minutes: 25,
+    summary: "Pechuga, quinoa y ensalada de rúcula, zanahoria, morrón, pepino y palta. El tomate crudo se cambia por pepino.",
+    plate: { protein: "Pechuga a la plancha", carb: "Quinoa", veg: "Rúcula, zanahoria, morrón, pepino, palta" },
+    sauceId: "aderezo",
+    carbBoost: "Otra media taza de quinoa, o una papa chica al lado.",
+    ingredients: [
+      g("pechuga", "Pechuga", 200, "carniceria"),
+      g("quinoa", "Quinoa", 70, "almacen"),
+      g("zanahoria", "Zanahoria", 80, "verduleria"),
+      u("morron", "Morrón", 0.5, "verduleria"),
+      u("pepino", "Pepino", 0.5, "verduleria"),
+      u("palta", "Palta", 0.25, "verduleria"),
+      ml("aceite-oliva", "Aceite de oliva", 5, "almacen"),
+      ...ENSALADA_BASE,
+    ],
+    steps: [
+      { text: "Herví la quinoa en agua con sal: dos partes de agua por una de quinoa.", seconds: 720, timerLabel: "Quinoa" },
+      { text: "Cortá zanahoria, morrón y pepino. La palta, al final." },
+      { text: "Plancha bien caliente con un hilo de aceite de oliva. Salá la pechuga y cociná unos 4 minutos por lado, sin aplastarla.", seconds: 240, timerLabel: "Por lado" },
+      { text: "Dejala descansar tapada.", seconds: 180, timerLabel: "Descanso" },
+      { text: "Plato de Harvard: pollo, quinoa y el resto ensalada. Aderezo de oliva, sal y limón. Sin tomate crudo." },
+    ],
+  }),
   plate({
     id: "pollo-salteado",
     meal: "almuerzo",
@@ -395,7 +429,7 @@ export const MEAL_OPTIONS: MealOption[] = [
     steps: [
       { text: "Arroz integral en agua hirviendo.", seconds: 1500, timerLabel: "Arroz" },
       { text: "Cortá el pollo en tiras, el zapallito, el morrón, la zanahoria y la cebolla." },
-      { text: "Salteá el pollo en poco aceite hasta que dore.", seconds: 360, timerLabel: "Pollo" },
+      { text: "Salteá el pollo en poco aceite de oliva hasta que dore.", seconds: 360, timerLabel: "Pollo" },
       { text: "Sumá las verduras y un cucharón de salsa de tomate. Cociná hasta que el zapallito esté tierno.", seconds: 480, timerLabel: "Verdura" },
       { text: "Ensalada de hojas al lado, con oliva, sal y limón. El salteado ya trae la salsa." },
     ],
@@ -423,10 +457,10 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Horno a 200 °C. Papa en gajos y el pollo, sal y orégano, poco aceite.", seconds: 2400, timerLabel: "Horno" },
+      { text: "Horno a 200 °C. Papa en gajos y el pollo, sal y orégano, poco aceite de oliva.", seconds: 2400, timerLabel: "Horno" },
       { text: "A los 25 minutos, si el pollo ya tomó color, tapalo con un poco de papel para que no se seque.", seconds: 1500, timerLabel: "Resto" },
       { text: "Ensalada: pepino, morrón, cebolla morada, rúcula, aceitunas y palta. Sin tomate crudo. Oliva, sal y limón." },
-      { text: "Pesto sobre el pollo si querés. Si hay palta, no abuses del aceite de la ensalada." },
+      { text: "Pesto sobre el pollo si querés. La ensalada lleva oliva, sal y limón; con palta, una cucharada alcanza." },
     ],
   }),
   plate({
@@ -448,7 +482,7 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Horno a 200 °C. Suprema con sal, poco aceite.", seconds: 1200, timerLabel: "Suprema" },
+      { text: "Horno a 200 °C. Suprema con sal, poco aceite de oliva.", seconds: 1200, timerLabel: "Suprema" },
       { text: "Batata en cubos, hervida, pisada con un chorrito de oliva y sal.", seconds: 900, timerLabel: "Batata" },
       { text: "Ensalada simple y salsa de yogur al lado." },
     ],
@@ -476,7 +510,7 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Horno a 200 °C. Papa en gajos, sal y poco aceite.", seconds: 1500, timerLabel: "Papa" },
+      { text: "Horno a 200 °C. Papa en gajos, sal y poco aceite de oliva.", seconds: 1500, timerLabel: "Papa" },
       { text: "La merluza entra los últimos 12 minutos, con sal y limón. No la dejes de más: se seca.", seconds: 720, timerLabel: "Merluza" },
       { text: "Ensalada de repollo, zanahoria, rúcula, pepino y palta. Sin tomate." },
       { text: "Salsa verde arriba del pescado. La ensalada, con oliva, sal y limón." },
@@ -487,15 +521,15 @@ export const MEAL_OPTIONS: MealOption[] = [
     meal: "almuerzo",
     slots: ["almuerzo", "cena"],
     group: "pescado",
-    title: "Salmón al horno con arroz",
+    title: "Salmón al horno con arroz integral",
     minutes: 25,
-    summary: "Salmón, arroz y ensalada de repollo, morrón, zanahoria y palta.",
-    plate: { protein: "Salmón 180 g", carb: "Arroz", veg: "Repollo, morrón, zanahoria, palta" },
+    summary: "Salmón, arroz integral y ensalada de repollo, morrón, zanahoria y palta.",
+    plate: { protein: "Salmón 180 g", carb: "Arroz integral", veg: "Repollo, morrón, zanahoria, palta" },
     sauceId: "aderezo",
     carbBoost: "Otra media taza de arroz.",
     ingredients: [
       g("salmon", "Salmón", 180, "carniceria"),
-      g("arroz", "Arroz", 70, "almacen"),
+      g("arroz-integral", "Arroz integral", 70, "almacen"),
       g("repollo", "Repollo", 70, "verduleria"),
       u("morron", "Morrón", 0.5, "verduleria"),
       g("zanahoria", "Zanahoria", 50, "verduleria"),
@@ -503,9 +537,9 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Arroz en agua hirviendo.", seconds: 900, timerLabel: "Arroz" },
+      { text: "Arroz integral en agua hirviendo.", seconds: 1500, timerLabel: "Arroz" },
       { text: "Horno a 200 °C. Salmón con sal. 10 a 12 minutos, el centro apenas rosado.", seconds: 660, timerLabel: "Salmón" },
-      { text: "Ensalada sin tomate. Limón sobre el salmón. Si hay palta, medí el aceite." },
+      { text: "Ensalada sin tomate. Limón sobre el salmón. Si hay palta, una cucharada de aceite de oliva alcanza." },
     ],
   }),
   plate({
@@ -531,37 +565,66 @@ export const MEAL_OPTIONS: MealOption[] = [
     steps: [
       { text: "Papa al horno o hervida.", seconds: 1200, timerLabel: "Papa" },
       { text: "Plancha bien caliente. Secá el atún, salalo y cociná 90 segundos por lado si lo querés jugoso.", seconds: 90, timerLabel: "Por lado" },
-      { text: "Ensalada de rúcula, palta, cebolla, pepino y zanahoria. Vinagreta de mostaza y miel, o el aderezo de limón." },
+      { text: "Ensalada de rúcula, palta, cebolla, pepino y zanahoria. El aderezo es oliva, sal y limón. La vinagreta, solo si querés algo más." },
+    ],
+  }),
+  plate({
+    id: "salmon-verduras",
+    meal: "cena",
+    slots: ["almuerzo", "cena"],
+    group: "pescado",
+    title: "Salmón con verduras al horno",
+    minutes: 35,
+    summary: "Salmón y verduras en la misma placa. Ensalada de repollo morado y pepino: el tomate crudo se cambia por pepino.",
+    plate: { protein: "Salmón 180 g", carb: "Verdura al horno; papa si entrenaste", veg: "Zapallito, morrón, cebolla, repollo, pepino" },
+    sauceId: "salsa-verde",
+    carbBoost: "Sumá una papa a la misma placa. En día de fondo, que sea generosa.",
+    ingredients: [
+      g("salmon", "Salmón", 180, "carniceria"),
+      u("zapallito", "Zapallito", 1, "verduleria"),
+      u("morron", "Morrón", 0.5, "verduleria"),
+      u("cebolla", "Cebolla", 0.5, "verduleria"),
+      g("repollo", "Repollo colorado", 80, "verduleria"),
+      u("pepino", "Pepino", 0.5, "verduleria"),
+      ml("aceite-oliva", "Aceite de oliva", 10, "almacen"),
+      ...ENSALADA_BASE,
+    ],
+    steps: [
+      { text: "Horno a 200 °C. Zapallito, morrón y cebolla en cubos, sal y aceite de oliva.", seconds: 900, timerLabel: "Verdura" },
+      { text: "El salmón entra los últimos 12 minutos, con sal y limón. El centro puede quedar apenas rosado.", seconds: 720, timerLabel: "Salmón" },
+      { text: "Ensalada de repollo morado y pepino. Sin tomate crudo. Oliva, sal y limón." },
+      { text: "Salsa verde arriba del salmón, no sobre la ensalada." },
     ],
   }),
 
-  // ——— Legumbres de lata: recetas cortas, sin técnica rara ———
+  // ——— Legumbres de lata: recetas cortas, sin remojo ni técnica ———
   plate({
     id: "lentejas",
-    meal: "almuerzo",
+    meal: "cena",
     slots: ["almuerzo", "cena"],
     group: "legumbre",
-    title: "Lentejas de lata con verdura y huevo",
-    minutes: 15,
-    summary: "Una lata, verdura picada y un huevo. No hay que remojar nada.",
-    plate: { protein: "Lentejas + huevo", carb: "La lenteja ya aporta", veg: "Zanahoria, morrón, hojas, remolacha" },
+    title: "Lentejas de lata con verdura y pechuga",
+    minutes: 20,
+    summary: "Una lata, verdura picada y pechuga. Sin remojo. Ensalada de hojas y remolacha, y fruta.",
+    plate: { protein: "Lentejas + pechuga", carb: "La lenteja ya aporta", veg: "Zanahoria, morrón, hojas, remolacha" },
     sauceId: "aderezo",
     carbBoost: "Sumá una papa chica en cubos a la cacerola, o pan.",
     ingredients: [
       u("lentejas-lata", "Lata de lentejas", 1, "almacen"),
-      u("huevo", "Huevo", 1, "almacen"),
+      g("pechuga", "Pechuga", 160, "carniceria"),
       u("cebolla", "Cebolla", 0.5, "verduleria"),
       g("zanahoria", "Zanahoria", 80, "verduleria"),
       u("morron", "Morrón", 0.5, "verduleria"),
       g("remolacha", "Remolacha", 60, "verduleria"),
       u("fruta", "Fruta de estación", 1, "verduleria"),
+      ml("aceite-oliva", "Aceite de oliva", 10, "almacen"),
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Herví el huevo.", seconds: 540, timerLabel: "Huevo" },
-      { text: "Rehoga cebolla, zanahoria y morrón en poco aceite.", seconds: 360, timerLabel: "Verdura" },
-      { text: "Escurrí las lentejas, sumalas y calentalas 3 minutos. Sal al final.", seconds: 180, timerLabel: "Lentejas" },
-      { text: "Serví con el huevo cortado arriba. Ensalada de hojas y remolacha al lado. Fruta de postre." },
+      { text: "Cortá la pechuga en tiras. Salteala en aceite de oliva hasta que dore.", seconds: 360, timerLabel: "Pollo" },
+      { text: "Sumá cebolla, zanahoria y morrón picados. Rehogá.", seconds: 300, timerLabel: "Verdura" },
+      { text: "Escurrí las lentejas de la lata, sumalas y calentalas 3 minutos. Sal al final. No hace falta remojar ni cocinarlas de cero.", seconds: 180, timerLabel: "Lentejas" },
+      { text: "Ensalada de hojas y remolacha. El tomate crudo no va: si falta color, más zanahoria. Aderezo de oliva, sal y limón. Fruta de postre." },
     ],
   }),
   plate({
@@ -596,28 +659,58 @@ export const MEAL_OPTIONS: MealOption[] = [
     meal: "almuerzo",
     slots: ["almuerzo", "cena"],
     group: "legumbre",
-    title: "Garbanzos salteados con arroz",
-    minutes: 20,
-    summary: "La versión aún más simple: lata + arroz + salsa de tomate.",
-    plate: { protein: "Garbanzos", carb: "Arroz", veg: "Morrón y zanahoria en el salteado" },
+    title: "Garbanzos salteados con arroz integral",
+    minutes: 25,
+    summary: "La versión aún más simple: lata, arroz integral y salsa de tomate.",
+    plate: { protein: "Garbanzos", carb: "Arroz integral", veg: "Morrón y zanahoria en el salteado" },
     sauceId: "tomate",
-    carbBoost: "Más arroz.",
+    carbBoost: "Más arroz integral.",
     ingredients: [
       u("garbanzos-lata", "Lata de garbanzos", 1, "almacen"),
-      g("arroz", "Arroz", 70, "almacen"),
+      g("arroz-integral", "Arroz integral", 70, "almacen"),
       u("morron", "Morrón", 0.5, "verduleria"),
       g("zanahoria", "Zanahoria", 60, "verduleria"),
       u("cebolla", "Cebolla", 0.25, "verduleria"),
+      ml("aceite-oliva", "Aceite de oliva", 10, "almacen"),
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Cociná el arroz.", seconds: 900, timerLabel: "Arroz" },
-      { text: "Salteá cebolla, zanahoria y morrón. Sumá los garbanzos enjuagados y 3 cucharadas de salsa de tomate.", seconds: 300, timerLabel: "Salteado" },
-      { text: "Serví sobre el arroz. Hojas verdes al lado con limón." },
+      { text: "Cociná el arroz integral.", seconds: 1500, timerLabel: "Arroz" },
+      { text: "Salteá cebolla, zanahoria y morrón en aceite de oliva. Sumá los garbanzos enjuagados y 3 cucharadas de salsa de tomate.", seconds: 300, timerLabel: "Salteado" },
+      { text: "Serví sobre el arroz. Hojas verdes al lado con oliva, sal y limón." },
     ],
   }),
 
   // ——— Huevos ———
+  plate({
+    id: "arroz-huevo",
+    meal: "cena",
+    slots: ["almuerzo", "cena"],
+    group: "huevo",
+    title: "Arroz con huevo",
+    minutes: 20,
+    summary: "Reemplaza el arroz con atún. Huevo, arroz integral y ensalada de repollo, pepino, morrón y palta. Fruta de postre.",
+    plate: { protein: "2 huevos", carb: "Arroz integral", veg: "Repollo, pepino, morrón, palta" },
+    sauceId: "aderezo",
+    carbBoost: "Otra media taza de arroz si el día fue de calidad o de fondo.",
+    ingredients: [
+      g("arroz-integral", "Arroz integral", 70, "almacen"),
+      u("huevo", "Huevos", 2, "almacen"),
+      g("repollo", "Repollo", 80, "verduleria"),
+      u("pepino", "Pepino", 0.5, "verduleria"),
+      u("morron", "Morrón", 0.5, "verduleria"),
+      u("palta", "Palta", 0.25, "verduleria"),
+      u("fruta", "Fruta de estación", 1, "verduleria"),
+      ml("aceite-oliva", "Aceite de oliva", 5, "almacen"),
+      ...ENSALADA_BASE,
+    ],
+    steps: [
+      { text: "Cociná el arroz integral en agua hirviendo con sal.", seconds: 1500, timerLabel: "Arroz" },
+      { text: "Huevos a la plancha o duros, con un hilo de aceite de oliva.", seconds: 240, timerLabel: "Huevos" },
+      { text: "Ensalada de repollo, pepino, morrón y palta. El tomate crudo no va. Oliva, sal y limón." },
+      { text: "Armá el plato: arroz, huevo y ensalada. Fruta después. No es atún, ni de lata ni fresco." },
+    ],
+  }),
   plate({
     id: "tortilla",
     meal: "cena",
@@ -625,7 +718,7 @@ export const MEAL_OPTIONS: MealOption[] = [
     group: "huevo",
     title: "Tortilla de zapallito y espinaca",
     minutes: 20,
-    summary: "Dos huevos y tres claras. Zapallito en lugar de berenjena. Ensalada de espinaca, morrón y zanahoria.",
+    summary: "Dos huevos y tres claras, con zapallito. Ensalada de espinaca, morrón, zanahoria y pepino, sin tomate crudo.",
     plate: { protein: "2 huevos + 3 claras", carb: "Poco: el día manda", veg: "Zapallito, espinaca, morrón, zanahoria, pepino" },
     carbBoost: "Una papa chica al horno o dos tostadas si entrenaste.",
     ingredients: [
@@ -639,7 +732,7 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Salteá el zapallito en rodajas con un chorrito de aceite.", seconds: 360, timerLabel: "Zapallito" },
+      { text: "Salteá el zapallito en rodajas con un chorrito de aceite de oliva.", seconds: 360, timerLabel: "Zapallito" },
       { text: "Sumá la espinaca hasta que baje.", seconds: 120, timerLabel: "Espinaca" },
       { text: "Batí 2 huevos y 3 claras con sal. Volcá sobre las verduras, fuego bajo, tapado.", seconds: 360, timerLabel: "Cuaje" },
       { text: "Si no se anima a darla vuelta, meté la sartén al horno 5 minutos.", seconds: 300, timerLabel: "Horno" },
@@ -679,7 +772,7 @@ export const MEAL_OPTIONS: MealOption[] = [
     group: "huevo",
     title: "Pasta con salsa de tomate y zapallito",
     minutes: 25,
-    summary: "Pasta integral, salsa casera, zapallito y claras. El reemplazo del plato que llevaba berenjena y atún.",
+    summary: "Pasta integral, salsa de tomate y zapallito en lugar de berenjena. Claras en lugar de atún.",
     plate: { protein: "Claras", carb: "Pasta integral", veg: "Zapallito y hojas con remolacha" },
     sauceId: "tomate",
     carbBoost: "Es el plato de hidrato: en día de fondo, serví un plato hondo.",
@@ -719,7 +812,7 @@ export const MEAL_OPTIONS: MealOption[] = [
       ...ENSALADA_BASE,
     ],
     steps: [
-      { text: "Horno a 200 °C. Zapallito, morrón y cebolla en cubos, sal y poco aceite.", seconds: 900, timerLabel: "Verdura" },
+      { text: "Horno a 200 °C. Zapallito, morrón y cebolla en cubos, sal y poco aceite de oliva.", seconds: 900, timerLabel: "Verdura" },
       { text: "Hacé dos huecos y cascá los huevos ahí. Otros 8 minutos, hasta que la clara cuaje.", seconds: 480, timerLabel: "Huevos" },
       { text: "Ensalada de repollo y pepino. Salsa verde si te queda de la merluza." },
     ],

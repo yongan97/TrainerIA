@@ -54,6 +54,10 @@ export function HoyView({ view, now = new Date() }: { view: KitchenView; now?: D
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Las 4 comidas</h2>
+        <p className="text-sm text-muted-foreground">
+          Desayuno, almuerzo y cena salen del plan del entrenador. La merienda no está en ese papel:
+          es fruta, yogur o pan integral para la tarde, y crece si el día es de entreno.
+        </p>
         {day.meals.map(({ meal, option, swapped }) => {
           const meta = MEAL_META[meal];
           const active = meal === mealNow;
