@@ -79,6 +79,9 @@ export interface Settings {
   hr_max: number | null;
   hr_rest: number | null;
   weight_kg: number | null;
+  /** Meta de peso (kg). La primera es ~100; después 90–95. */
+  weight_goal_kg: number | null;
+  weight_goal_date: string | null;
   goal_name: string | null;
   goal_date: string | null;
   goal_distance_km: number | null;
