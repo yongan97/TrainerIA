@@ -34,7 +34,7 @@ export interface Meal {
 
 const DESAYUNO_OPTS = [
   "Tostada integral + huevos revueltos (1 entero + 1 clara)",
-  "Tostada integral + queso port salut y tomate",
+  "Tostada integral + queso port salut y palta",
   "Tostada integral + mantequilla de maní (1 cdita)",
   "Tostada integral + ricota magra u hummus",
   "Bowl de granola o cereales (5 cdas) con yogur o leche",
@@ -51,8 +51,8 @@ const PROTEINAS = [
   "180-200 g de legumbres cocidas (o veggie burger, seitán, soja, tofu)",
   "2 huevos + 2 claras (omelette con port salut)",
   "180 g de ricota magra",
-  "1 lata grande de atún al natural",
-  "2-3 filet de pescado (merluza, gatuzo, brótola)",
+  "180-200 g de atún rojo fresco (nunca de lata)",
+  "2-3 filet de merluza o salmón (nunca mariscos ni sardinas)",
 ];
 
 const HIDRATOS = [
@@ -68,7 +68,7 @@ const HIDRATOS = [
 ];
 
 const VEGETALES = [
-  "Ensalada (tomate, lechuga, rúcula…)",
+  "Ensalada (pepino, zanahoria, rúcula, palta… sin tomate crudo)",
   "Puré de zapallo",
   "Revuelto de zapallitos",
   "Vegetales al horno",
@@ -76,7 +76,7 @@ const VEGETALES = [
 ];
 
 const ALTERNATIVAS_PLATO = [
-  "1-2 porciones de tarta (atún, pollo o vegetales con ricota) + ensalada + 3 cdas de hidratos",
+  "1-2 porciones de tarta (pollo o verdura con ricota, sin atún) + ensalada + 3 cdas de hidratos",
   "Pastel de papa",
   "Guiso de lentejas (con papa o batata)",
 ];
@@ -121,7 +121,7 @@ export const MEALS: Meal[] = [
     options: DESAYUNO_OPTS,
     notes: ["⭐ Momento bisagra del día — prestarle atención."],
     paraLlevar: [
-      "Sándwich de port salut y tomate",
+      "Sándwich de port salut y palta",
       "Yogur (Ser Pro) con granola o cereales",
       "Pancake solo o con mantequilla de maní",
       "Barrita de proteína (Kibar, Crudda, Pont, Integra) + banana",
@@ -229,7 +229,7 @@ export const POSTRE =
   "Fruta fresca (evitar banana de postre y fruta como postre de la cena) ó ensalada de fruta (½ taza) ó helado casero de frutas ó postre lácteo/maicena (máx 2 veces/semana) ó 1 cuadradito de chocolate amargo. No es obligatorio.";
 
 export const FREE_MEAL =
-  "1 vez por semana: 1 plato de pastas ó 2-3 porciones de pizza ó 2-3 empanadas al horno ó 15-20 piezas de sushi ó 1 hamburguesa. No es obligatorio — somos seres sociales y está bien disfrutar.";
+  "1 vez por semana: 1 plato de pastas ó 2-3 porciones de pizza ó 2-3 empanadas al horno ó 1 hamburguesa. Sin mariscos. No es obligatorio — somos seres sociales y está bien disfrutar.";
 
 // ————— Adherencia diaria (checklist) —————
 

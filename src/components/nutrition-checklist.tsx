@@ -16,12 +16,14 @@ const GLASS_ML = 250;
  * Optimista (marca al toque) y persiste en /api/nutrition.
  */
 export function NutritionChecklist({
-  date, initial, streak, adherence7,
+  date, initial, streak, adherence7, large = false,
 }: {
   date: string;
   initial: NutritionLog | null;
   streak: number;
   adherence7: number | null;
+  /** Botones grandes, para la tablet de la cocina. */
+  large?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -78,7 +80,8 @@ export function NutritionChecklist({
               key={it.key}
               onClick={() => save({ [it.key]: !on } as Partial<NutritionLog>)}
               className={cn(
-                "flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm transition-colors",
+                "flex items-center gap-2 rounded-lg border text-left transition-colors",
+                large ? "min-h-14 px-4 py-3 text-base" : "px-3 py-2.5 text-sm",
                 on
                   ? "border-primary/40 bg-primary/10 text-foreground"
                   : "border-border bg-background text-muted-foreground hover:bg-secondary/60",
@@ -107,14 +110,20 @@ export function NutritionChecklist({
         </div>
         <button
           onClick={() => save({ water_ml: Math.max(0, water - GLASS_ML) })}
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-secondary"
+          className={cn(
+            "flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-secondary",
+            large ? "h-12 w-12" : "h-7 w-7",
+          )}
           aria-label="Quitar un vaso"
         >
           <Minus className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => save({ water_ml: water + GLASS_ML })}
-          className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-secondary"
+          className={cn(
+            "flex items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-secondary",
+            large ? "h-12 w-12" : "h-7 w-7",
+          )}
           aria-label="Sumar un vaso"
         >
           <Plus className="h-3.5 w-3.5" />

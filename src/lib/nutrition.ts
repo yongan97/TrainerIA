@@ -131,23 +131,23 @@ export const POST: Recipe[] = [
     tags: ["post", "rápido"],
   },
   {
-    title: "Bowl de arroz con atún y huevo",
+    title: "Bowl de arroz con huevo y palta",
     timing: "Dentro de 1-2 h",
     minutes: 15,
     macros: "Carbo + proteína",
     ingredients: [
       "1 taza de arroz cocido",
-      "1 lata de atún al natural",
-      "1 huevo duro",
-      "1/2 palta, tomate",
+      "2 huevos",
+      "1/2 palta",
+      "Pepino y zanahoria",
       "Aceite de oliva, limón",
     ],
     steps: [
-      "Sobre el arroz tibio sumá el atún escurrido.",
-      "Agregá el huevo duro en mitades, la palta y el tomate.",
+      "Sobre el arroz tibio apoyá los huevos (duros o a la plancha).",
+      "Sumá la palta, el pepino y la zanahoria. Sin tomate crudo.",
       "Condimentá con aceite de oliva y limón.",
     ],
-    why: "Rellena glucógeno con el arroz y aporta proteína magra. Se arma en minutos si tenés arroz cocido de antes.",
+    why: "Rellena glucógeno con el arroz y aporta proteína del huevo. Sin atún de lata: no te gusta, y el de lata no entra en el plan.",
     tags: ["post", "completo"],
   },
   {
@@ -177,7 +177,7 @@ export const POST: Recipe[] = [
     ingredients: [
       "1-2 tortillas de trigo",
       "Pechuga de pollo grillada en tiras",
-      "Queso, hojas verdes, tomate",
+      "Queso, hojas verdes, pepino y palta",
       "Yogur o mostaza para untar",
     ],
     steps: [
@@ -193,12 +193,12 @@ export const POST: Recipe[] = [
 /** DÍAS SIN ENTRENAR: mantenimiento, proteína para reparar, antiinflamatorios, más verdura. */
 export const REST: Recipe[] = [
   {
-    title: "Salmón o caballa con vegetales asados",
+    title: "Salmón con vegetales asados",
     timing: "Almuerzo o cena",
     minutes: 25,
     macros: "Proteína · omega-3 (antiinflamatorio)",
     ingredients: [
-      "1 filete de salmón o caballa",
+      "1 filete de salmón",
       "Zucchini, morrón, cebolla, brócoli",
       "Aceite de oliva, limón, sal",
     ],
@@ -217,8 +217,8 @@ export const REST: Recipe[] = [
     macros: "Proteína · fibra · grasa buena",
     ingredients: [
       "Hojas verdes (rúcula, espinaca, mix)",
-      "Pollo o atún o 2 huevos duros",
-      "Palta, tomate, zanahoria",
+      "Pollo o 2 huevos duros (nunca atún de lata ni mariscos)",
+      "Palta, pepino, zanahoria",
       "Semillas (girasol, chía), aceite de oliva",
     ],
     steps: [

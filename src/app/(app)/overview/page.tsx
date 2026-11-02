@@ -9,6 +9,7 @@ import { CoachCard } from "@/components/coach-card";
 import { RecoverySparkline } from "@/components/recovery-sparkline";
 import { fmt, fmtDuration, fmtDistance, recoveryColor } from "@/lib/format";
 import type { PlannedSession } from "@/lib/domain/types";
+import { NutritionWidget } from "@/components/kitchen/widget";
 
 export const dynamic = "force-dynamic";
 
@@ -191,6 +192,8 @@ export default async function OverviewPage() {
           </CardContent>
         </Card>
       </div>
+
+      <NutritionWidget today={today} />
 
       {/* MI SEMANA */}
       {connected && (
