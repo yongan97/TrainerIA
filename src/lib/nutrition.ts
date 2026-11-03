@@ -1,10 +1,9 @@
 import type { SportId } from "@/lib/sports/registry";
 
 /**
- * Módulo de nutrición. Biblioteca de recetas/ideas (rápidas-intermedias, con
- * ingredientes accesibles en Buenos Aires) organizada por momento — antes /
- * después / días sin entrenar — más un motor contextual que elige el foco del
- * día según lo que entrenaste y cómo venís de recuperación.
+ * Ideas sueltas por momento (antes / después / descanso) y el foco del día
+ * según carga y recovery. No es el menú de /nutricion: ese sale del plan
+ * semanal del entrenador en src/lib/kitchen.
  *
  * Multideporte: no asume "correr". El foco se decide por carga (strain/duración)
  * y recovery, no por el deporte.

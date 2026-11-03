@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const GLASS_ML = 250;
 
 /**
- * Checklist diario del plan: comidas, suplementos y agua.
+ * Checklist del día: comidas, creatina, omega-3 y agua.
  * Optimista (marca al toque) y persiste en /api/nutrition.
  */
 export function NutritionChecklist({
@@ -55,7 +55,7 @@ export function NutritionChecklist({
         <div>
           <div className="text-sm font-semibold text-foreground">Checklist de hoy</div>
           <div className="text-xs text-muted-foreground">
-            {pct}% del plan{adherence7 != null && ` · ${Math.round(adherence7 * 100)}% últimos 7 días`}
+            {pct}% de hoy{adherence7 != null && ` · ${Math.round(adherence7 * 100)}% últimos 7 días`}
           </div>
         </div>
         {streak > 0 && (

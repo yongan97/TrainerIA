@@ -43,9 +43,9 @@ export function KitchenIntro() {
     <header className="mb-4">
       <h1 className="text-3xl font-semibold tracking-tight">Cocina</h1>
       <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-        Semana mediterránea a partir del plato de tu entrenador, con los horarios y las cuentas
-        que ya venías usando (proteína 1,8 g/kg, carga 7–10 g/kg). No es consejo médico: el plan
-        de la Lic. Floreani estaba armado para otra persona. Confirmalo con un nutricionista.
+        El menú es el plan semanal de tu entrenador, con plato de Harvard y principios mediterráneos.
+        Proteína 1,8 g/kg e hidratos según la carga son la cuenta de entreno, no un menú de otra persona.
+        No es consejo médico. Confirmalo con un nutricionista.
       </p>
     </header>
   );

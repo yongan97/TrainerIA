@@ -12,14 +12,25 @@ export const MEAL_META: Record<MealId, { name: string; time: string; fromHour: n
   cena: { name: "Cena", time: "20:30", fromHour: 19 },
 };
 
-/** Plantilla lunes→domingo. Los ids son los default; el usuario puede cambiar por equivalentes. */
+/**
+ * Plantilla lunes→domingo del plan del entrenador.
+ * La merienda no está en el papel: fruta, yogur o pan según el día de entreno.
+ * Los ids son el default; cambiar solo ofrece un equivalente del mismo tipo.
+ */
 export const WEEK_TEMPLATE: Record<MealId, string>[] = [
-  { desayuno: "des-yogur-avena", almuerzo: "bife-nalga", merienda: "mer-yogur-banana", cena: "lentejas" },
+  // Lunes: pollo a la plancha + quinoa; lentejas con pechuga
+  { desayuno: "des-yogur-avena", almuerzo: "pollo-plancha", merienda: "mer-yogur-banana", cena: "lentejas" },
+  // Martes: merluza al horno; tortilla de zapallito
   { desayuno: "des-tostada-palta", almuerzo: "merluza-horno", merienda: "mer-yogur-banana", cena: "tortilla" },
-  { desayuno: "des-granola", almuerzo: "cuadril-horno", merienda: "mer-tostada-miel", cena: "salmon-horno" },
+  // Miércoles: carne magra; arroz con huevo (era arroz con atún)
+  { desayuno: "des-granola", almuerzo: "cuadril-horno", merienda: "mer-tostada-miel", cena: "arroz-huevo" },
+  // Jueves: pollo salteado; atún rojo y papa al horno
   { desayuno: "des-queso", almuerzo: "pollo-salteado", merienda: "mer-fruta-nueces", cena: "atun-rojo" },
+  // Viernes: garbanzos; pasta con zapallito y claras
   { desayuno: "des-porridge", almuerzo: "garbanzos", merienda: "mer-tostada-miel", cena: "pasta-clara" },
-  { desayuno: "des-ricota", almuerzo: "milanesas", merienda: "mer-yogur-banana", cena: "huevos-verdura" },
+  // Sábado: milanesas al horno; salmón con verduras
+  { desayuno: "des-ricota", almuerzo: "milanesas", merienda: "mer-yogur-banana", cena: "salmon-verduras" },
+  // Domingo: pollo al horno; omelette
   { desayuno: "des-bowl", almuerzo: "pollo-horno", merienda: "mer-ricota", cena: "omelette" },
 ];
 

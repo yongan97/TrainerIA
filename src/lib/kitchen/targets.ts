@@ -1,7 +1,8 @@
 /**
- * Cuentas que ya estaban personalizadas para este atleta (106,5 kg, 185 cm):
- * proteína 1,8 g/kg todos los días, y carga de hidratos 7–10 g/kg.
- * Sobre 106,5 kg, 7 g/kg ≈ 750 g y 8 g/kg ≈ 850 g (el rango práctico de un fondo).
+ * Nutrición deportiva para este atleta (106,5 kg, 185 cm). No es un menú:
+ * el menú es el plan del entrenador. Acá solo están las cuentas.
+ * Proteína 1,8 g/kg todos los días, e hidratos según la carga (en un fondo, 7–8 g/kg).
+ * Sobre 106,5 kg, 7 g/kg ≈ 750 g y 8 g/kg ≈ 850 g.
  * El tope del protocolo escandinavo es 10 g/kg (~1065 g), solo 2–3 días antes de una carrera.
  *
  * El plato de Harvard base es ½ verdura, ¼ proteína, ¼ hidrato.

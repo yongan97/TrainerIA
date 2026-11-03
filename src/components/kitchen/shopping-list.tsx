@@ -108,8 +108,8 @@ export function ShoppingList({
         );
       })}
       <p className="text-sm text-muted-foreground">
-        Las claras de las recetas se suman como huevos. Máximo 3 yemas por día: si sobran yemas, usalas en otra comida o descartalas.
-        Alérgico a mariscos: en esta lista no hay langostinos, mejillones ni nada parecido.
+        Las claras de las recetas se suman como huevos.
+        Alérgico a mariscos: en esta lista no hay langostinos, mejillones, sardinas ni atún de lata.
       </p>
     </div>
   );
